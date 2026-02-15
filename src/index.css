@@ -1,0 +1,600 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 2%;
+    --foreground: 0 0% 88%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 88%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 88%;
+    --primary: 0 72% 43%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 88%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 72% 43%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 43%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 72% 43%;
+    --radius: 0.5rem;
+
+    --blood-red: #D92525;
+    --void-black: #050505;
+    --deep-grey: #0F0F0F;
+    --off-white: #E0E0E0;
+    --muted-grey: #666666;
+    --dark-border: #333333;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#050505] text-[#E0E0E0] antialiased;
+    font-family: 'Roboto Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #D92525;
+}
+
+/* Noise Overlay */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Scanlines */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px);
+}
+
+/* Glitch Effect */
+@keyframes glitch {
+  0% {
+    clip-path: inset(40% 0 61% 0);
+    transform: translate(-2px, 2px);
+  }
+
+  20% {
+    clip-path: inset(92% 0 1% 0);
+    transform: translate(2px, -2px);
+  }
+
+  40% {
+    clip-path: inset(43% 0 1% 0);
+    transform: translate(-2px, 2px);
+  }
+
+  60% {
+    clip-path: inset(25% 0 58% 0);
+    transform: translate(2px, -2px);
+  }
+
+  80% {
+    clip-path: inset(54% 0 7% 0);
+    transform: translate(-2px, 2px);
+  }
+
+  100% {
+    clip-path: inset(58% 0 43% 0);
+    transform: translate(2px, -2px);
+  }
+}
+
+.glitch-text {
+  position: relative;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.glitch-text:hover::before {
+  animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  color: #0ff;
+  z-index: -1;
+  opacity: 0.8;
+}
+
+.glitch-text:hover::after {
+  animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+  color: #f0f;
+  z-index: -2;
+  opacity: 0.8;
+}
+
+/* Flicker Animation */
+@keyframes flicker {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+
+  52% {
+    opacity: 0.3;
+  }
+
+  54% {
+    opacity: 0.8;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  92% {
+    opacity: 0.4;
+  }
+
+  94% {
+    opacity: 1;
+  }
+}
+
+.flicker {
+  animation: flicker 4s infinite;
+}
+
+/* Pulse Animation */
+@keyframes pulse-red {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(217, 37, 37, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(217, 37, 37, 0.6);
+  }
+}
+
+.pulse-red {
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+/* Shake Animation */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10% {
+    transform: translateX(-5px);
+  }
+
+  20% {
+    transform: translateX(5px);
+  }
+
+  30% {
+    transform: translateX(-5px);
+  }
+
+  40% {
+    transform: translateX(5px);
+  }
+
+  50% {
+    transform: translateX(-5px);
+  }
+
+  60% {
+    transform: translateX(5px);
+  }
+
+  70% {
+    transform: translateX(-5px);
+  }
+
+  80% {
+    transform: translateX(5px);
+  }
+
+  90% {
+    transform: translateX(-5px);
+  }
+}
+
+.shake {
+  animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+/* OSD Retro Text Effect */
+.osd-scanline {
+  background: repeating-linear-gradient(to bottom,
+      currentColor 0px,
+      currentColor 3px,
+      rgba(0, 0, 0, 0.2) 3px,
+      rgba(0, 0, 0, 0.2) 4px);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+/* Ensure color inherits for the gradient to work with text-color util classes, 
+   but since color is transparent, we need to set the background color via style or class context.
+   Actually, currentColor works with background gradients in some browsers but strictly speaking
+   we might need to set the color explicitly on the gradient. 
+   Let's use a simpler approach for stability: just strict lines over text.
+*/
+.osd-text-red {
+  background: repeating-linear-gradient(180deg,
+      #D92525 0px,
+      #D92525 3px,
+      rgba(217, 37, 37, 0.5) 3px,
+      rgba(217, 37, 37, 0.5) 4px);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.osd-text-white {
+  background: repeating-linear-gradient(180deg,
+      #e0e0e0 0px,
+      #e0e0e0 3px,
+      rgba(224, 224, 224, 0.5) 3px,
+      rgba(224, 224, 224, 0.5) 4px);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.osd-text-green {
+  background: repeating-linear-gradient(180deg,
+      #22c55e 0px,
+      #22c55e 3px,
+      rgba(34, 197, 94, 0.5) 3px,
+      rgba(34, 197, 94, 0.5) 4px);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Glow Effects */
+.glow-red {
+  text-shadow: 0 0 10px rgba(217, 37, 37, 0.8),
+    0 0 20px rgba(217, 37, 37, 0.6),
+    0 0 30px rgba(217, 37, 37, 0.4);
+}
+
+.glow-red-box {
+  box-shadow: 0 0 20px rgba(217, 37, 37, 0.5),
+    0 0 40px rgba(217, 37, 37, 0.3),
+    inset 0 0 20px rgba(217, 37, 37, 0.1);
+}
+
+/* Typewriter Effect */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 2s steps(40, end);
+}
+
+/* Breathing Animation */
+@keyframes breathe {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Custom Cursor */
+.custom-cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #D92525;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: width 0.15s, height 0.15s, border-color 0.15s;
+  mix-blend-mode: difference;
+}
+
+.custom-cursor.hover {
+  width: 40px;
+  height: 40px;
+  border-color: #fff;
+}
+
+.cursor-trail {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: rgba(217, 37, 37, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+}
+
+/* Green Zone */
+.green-zone {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05));
+  border: 2px solid #22c55e;
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
+}
+
+/* Red Zone */
+.red-zone {
+  background: linear-gradient(135deg, rgba(217, 37, 37, 0.2), rgba(217, 37, 37, 0.05));
+  border: 2px solid #D92525;
+  box-shadow: 0 0 30px rgba(217, 37, 37, 0.3);
+}
+
+/* Number Input */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Progress Bar */
+.progress-bar {
+  background: linear-gradient(90deg, #D92525, #ff4444);
+  box-shadow: 0 0 10px rgba(217, 37, 37, 0.5);
+}
+
+/* Card Styles */
+.game-card {
+  background: rgba(15, 15, 15, 0.9);
+  border: 1px solid #333;
+  backdrop-filter: blur(10px);
+}
+
+/* Button Hover Effects */
+.btn-horror {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-horror::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(217, 37, 37, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-horror:hover::before {
+  left: 100%;
+}
+
+.btn-horror:hover {
+  border-color: #D92525;
+  box-shadow: 0 0 20px rgba(217, 37, 37, 0.4);
+}
+
+/* Grid Pattern */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(51, 51, 51, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51, 51, 51, 0.3) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Vignette Effect - Made darker and more dramatic */
+.vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9997;
+  background: radial-gradient(circle at center, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.8) 90%, #000 100%);
+  mix-blend-mode: multiply;
+}
+
+/* Joker Background Effect - More visible and dramatic */
+@keyframes hollow-glow {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+    filter: brightness(0.6) contrast(1.2) sepia(0.2) hue-rotate(-10deg);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+    filter: brightness(0.8) contrast(1.4) sepia(0.4) hue-rotate(0deg) saturate(1.2);
+  }
+}
+
+.joker-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/joker-bg.png');
+  background-size: cover;
+  background-position: 30% center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 0;
+  /* Changed from overlay to normal with opacity control for better visibility */
+  opacity: 0.4;
+  animation: hollow-glow 8s ease-in-out infinite;
+}
+
+/* Add a red tint overlay for extra horror atmosphere */
+.joker-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(217, 37, 37, 0.1), rgba(0, 0, 0, 0.8));
+  mix-blend-mode: overlay;
+}
+
+/* Loading Animation */
+@keyframes loading-bar {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+.loading-bar {
+  animation: loading-bar 2s ease-out forwards;
+}
+
+/* Radial Progress */
+.radial-progress {
+  transform: rotate(-90deg);
+}
+
+.radial-progress circle {
+  transition: stroke-dashoffset 0.35s;
+}
+
+/* Zone Transition */
+@keyframes zone-flash {
+
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.zone-flash {
+  animation: zone-flash 0.3s ease-in-out 3;
+}
+
+/* Text Scramble Effect placeholder */
+.scramble-text {
+  font-family: 'Roboto Mono', monospace;
+}
+
+/* Selection Color */
+::selection {
+  background: rgba(217, 37, 37, 0.5);
+  color: #fff;
+}
+
+/* Focus Styles */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #D92525;
+  outline-offset: 2px;
+}
