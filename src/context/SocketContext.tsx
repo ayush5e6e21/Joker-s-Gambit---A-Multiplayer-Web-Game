@@ -20,10 +20,13 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         // Connect to backend
-        // In production, we use the environment variable. In development, we fallback to localhost:3001
-        // or the environment variable if set in .env
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-        console.log('Connecting to backend at:', backendUrl);
+        // In production, undefined URL means "same origin", which is what we want for single-service deployment
+        // In development, we default to localhost:3001
+        const backendUrl = import.meta.env.PROD
+            ? (import.meta.env.VITE_BACKEND_URL || undefined)
+            : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001');
+
+        console.log('Connecting to backend at:', backendUrl || 'window.origin');
 
         const socketInstance = io(backendUrl, {
             transports: ['websocket'],
