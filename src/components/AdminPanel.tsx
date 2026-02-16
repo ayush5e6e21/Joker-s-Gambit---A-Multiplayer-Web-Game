@@ -211,7 +211,7 @@ export const AdminPanel = ({
                                     setError(false);
                                 }}
                                 placeholder="Enter Password"
-                                className={`bg-[#050505] border-gray-700 text-center text-xl tracking-widest ${error ? 'border-red-500' : ''}`}
+                                className={`bg-[#050505] border-gray-700 text-center text-xl tracking-widest ${error ? 'border-[#D92525]' : ''}`}
                                 autoFocus
                             />
                             {error && (
@@ -267,7 +267,7 @@ export const AdminPanel = ({
 
                     {/* Connection Status */}
                     <div className="absolute top-8 right-32 flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse'}`} />
+                        <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-[#D92525] shadow-[0_0_10px_#D92525] animate-pulse'}`} />
                         <span className="text-xs text-gray-500 tracking-widest">{isConnected ? 'ONLINE' : 'OFFLINE'}</span>
                     </div>
 

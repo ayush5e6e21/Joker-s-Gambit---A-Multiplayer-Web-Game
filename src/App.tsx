@@ -168,8 +168,8 @@ const EntranceScreen = ({ onEnter, onAdminClick }: { onEnter: () => void; onAdmi
               style={{ filter: 'drop-shadow(0 0 50px rgba(217, 37, 37, 0.5))' }}
             />
             {/* Glowing Eyes Effect */}
-            <div className="absolute top-[32%] left-[38%] w-4 h-4 bg-red-500 rounded-full blur-sm animate-pulse" />
-            <div className="absolute top-[32%] right-[38%] w-4 h-4 bg-red-500 rounded-full blur-sm animate-pulse" />
+            <div className="absolute top-[32%] left-[38%] w-4 h-4 bg-[#D92525] rounded-full blur-sm animate-pulse" />
+            <div className="absolute top-[32%] right-[38%] w-4 h-4 bg-[#D92525] rounded-full blur-sm animate-pulse" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -219,10 +219,11 @@ const EntranceScreen = ({ onEnter, onAdminClick }: { onEnter: () => void; onAdmi
               <Button
                 onClick={() => {
                   try {
-                    document.documentElement.requestFullscreen().catch((err) => {
-                      console.log('Fullscreen blocked:', err);
-                    });
-                  } catch (e) { console.error(e); }
+                    const element = document.documentElement;
+                    if (element.requestFullscreen) {
+                      element.requestFullscreen();
+                    }
+                  } catch (e) { /* ignore */ }
                   onEnter();
                 }}
                 className="btn-horror px-12 py-6 text-xl bg-transparent border-2 border-[#D92525] text-[#D92525] hover:bg-[#D92525] hover:text-black transition-all duration-300 rounded-none tracking-widest"
