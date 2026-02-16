@@ -29,7 +29,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('Connecting to backend at:', backendUrl || 'window.origin');
 
         const socketInstance = io(backendUrl, {
-            transports: ['websocket'],
             autoConnect: true,
         });
 
