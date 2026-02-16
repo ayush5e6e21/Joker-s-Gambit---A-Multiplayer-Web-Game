@@ -645,13 +645,22 @@ function endNumberSelectionPhase(room) {
   // Find duplicates
   room.duplicateNumbers = findDuplicates(room);
 
-  // Find closest player
-  room.greenPlayer = findClosestPlayer(room, target);
+  if (room.duplicateNumbers.length > 0) {
+    // DUPLICATE DETECTED: No zones, everyone penalized
+    room.greenPlayer = null;
+    room.redPlayers = [];
+    console.log(`Round ${room.round}: Duplicates found [${room.duplicateNumbers}]. Skipping zone assignment.`);
+  } else {
+    // Find closest player
+    room.greenPlayer = findClosestPlayer(room, target);
 
-  // Determine red players
-  room.redPlayers = room.players
-    .filter(p => !p.isEliminated && p.id !== room.greenPlayer)
-    .map(p => p.id);
+    // Determine red players
+    room.redPlayers = room.players
+      .filter(p => !p.isEliminated && p.id !== room.greenPlayer)
+      .map(p => p.id);
+
+    console.log(`Round ${room.round} calculation: avg=${average}, target=${target}, green=${room.greenPlayer}`);
+  }
 
   console.log(`Round ${room.round} calculation: avg=${average}, target=${target}, green=${room.greenPlayer}`);
 

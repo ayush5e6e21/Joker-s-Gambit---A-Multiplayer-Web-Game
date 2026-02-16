@@ -217,7 +217,14 @@ const EntranceScreen = ({ onEnter, onAdminClick }: { onEnter: () => void; onAdmi
           >
             <div className="flex gap-4 items-center mt-12 relative z-50">
               <Button
-                onClick={onEnter}
+                onClick={() => {
+                  try {
+                    document.documentElement.requestFullscreen().catch((err) => {
+                      console.log('Fullscreen blocked:', err);
+                    });
+                  } catch (e) { console.error(e); }
+                  onEnter();
+                }}
                 className="btn-horror px-12 py-6 text-xl bg-transparent border-2 border-[#D92525] text-[#D92525] hover:bg-[#D92525] hover:text-black transition-all duration-300 rounded-none tracking-widest"
                 data-cursor-hover
               >
@@ -1092,22 +1099,38 @@ const ZoneRevealPhase = ({ gameState }: { gameState: GameState }) => {
   const greenTeamId = gameState.greenZoneTeam;
   const redTeamIds = gameState.redZoneTeams;
   const target = gameState.targetNumber || 0;
+  const isDuplicateRound = greenTeamId === null && step >= 2;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 overflow-hidden relative">
       {/* Background Zones (Always visible but subtle) */}
-      <div className="absolute inset-0 flex">
-        <div className="w-1/2 bg-green-900/5 border-r border-green-500/10 flex flex-col items-center pt-32 transition-colors duration-1000"
-          style={{ backgroundColor: step >= 2 ? 'rgba(20, 83, 45, 0.1)' : 'transparent' }}>
-          <Shield className="w-32 h-32 text-green-500/10 mb-4" />
-          <h2 className="text-4xl font-bold text-green-500/20 tracking-widest">SAFE ZONE</h2>
+      {!isDuplicateRound && (
+        <div className="absolute inset-0 flex">
+          <div className="w-1/2 bg-green-900/5 border-r border-green-500/10 flex flex-col items-center pt-32 transition-colors duration-1000"
+            style={{ backgroundColor: step >= 2 ? 'rgba(20, 83, 45, 0.1)' : 'transparent' }}>
+            <Shield className="w-32 h-32 text-green-500/10 mb-4" />
+            <h2 className="text-4xl font-bold text-green-500/20 tracking-widest">SAFE ZONE</h2>
+          </div>
+          <div className="w-1/2 bg-red-900/5 flex flex-col items-center pt-32 transition-colors duration-1000"
+            style={{ backgroundColor: step >= 2 ? 'rgba(127, 29, 29, 0.1)' : 'transparent' }}>
+            <Swords className="w-32 h-32 text-[#D92525]/10 mb-4" />
+            <h2 className="text-4xl font-bold text-[#D92525]/20 tracking-widest">TRIAL ZONE</h2>
+          </div>
         </div>
-        <div className="w-1/2 bg-red-900/5 flex flex-col items-center pt-32 transition-colors duration-1000"
-          style={{ backgroundColor: step >= 2 ? 'rgba(127, 29, 29, 0.1)' : 'transparent' }}>
-          <Swords className="w-32 h-32 text-[#D92525]/10 mb-4" />
-          <h2 className="text-4xl font-bold text-[#D92525]/20 tracking-widest">TRIAL ZONE</h2>
+      )}
+
+      {/* Duplicate / Confusion Background */}
+      {isDuplicateRound && (
+        <div className="absolute inset-0 bg-[#D92525]/10 flex flex-col items-center justify-center">
+          <motion.div
+            animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <AlertTriangle className="w-96 h-96 text-[#D92525]/20" />
+          </motion.div>
         </div>
-      </div>
+      )}
 
       <LayoutGroup>
         {/* Header Area */}
@@ -1118,9 +1141,9 @@ const ZoneRevealPhase = ({ gameState }: { gameState: GameState }) => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                className="bg-[#0a0a0a] border-2 border-[#D92525] px-12 py-6 rounded-xl flex flex-col items-center shadow-[0_0_50px_rgba(217,37,37,0.3)]"
+                className={`bg-[#0a0a0a] border-2 ${isDuplicateRound ? 'border-[#D92525] animate-pulse' : 'border-[#D92525]'} px-12 py-6 rounded-xl flex flex-col items-center shadow-[0_0_50px_rgba(217,37,37,0.3)]`}
               >
-                <h3 className="text-gray-500 tracking-widest text-sm mb-2">TARGET NUMBER</h3>
+                <h3 className="text-gray-500 tracking-widest text-sm mb-2">{isDuplicateRound ? 'CONFUSION' : 'TARGET NUMBER'}</h3>
                 <h1 className="text-6xl font-bold text-[#D92525] glow-red">{target.toFixed(2)}</h1>
               </motion.div>
             )}
@@ -1138,8 +1161,8 @@ const ZoneRevealPhase = ({ gameState }: { gameState: GameState }) => {
             </div>
           )}
 
-          {/* Split Zones (Step 2+) */}
-          {step >= 2 && (
+          {/* Split Zones (Step 2+) - Normal Case */}
+          {step >= 2 && !isDuplicateRound && (
             <div className="flex h-full w-full">
               {/* Green Zone Container */}
               <div className="w-1/2 flex flex-col items-center gap-6 pt-20">
@@ -1156,17 +1179,32 @@ const ZoneRevealPhase = ({ gameState }: { gameState: GameState }) => {
               </div>
             </div>
           )}
+
+          {/* Duplicate Case - All clustered with Warning */}
+          {step >= 2 && isDuplicateRound && (
+            <div className="flex flex-col items-center gap-8 pt-12">
+              <h2 className="text-4xl font-bold text-[#D92525] tracking-[0.5em] animate-pulse">DUPLICATE NUMBERS DETECTED</h2>
+              <div className="flex justify-center flex-wrap gap-8">
+                {gameState.teams.map((team: any) => (
+                  <TeamCard key={team.id} team={team} target={target} showDiff={true} isRed={true} />
+                ))}
+              </div>
+              <div className="text-2xl text-white font-mono bg-[#D92525] px-6 py-2 rounded">
+                ALL TEAMS: -2 POINTS
+              </div>
+            </div>
+          )}
         </div>
       </LayoutGroup>
 
-      {gameState.duplicatePenaltyActive && step >= 2 && (
+      {(gameState.duplicatePenaltyActive || isDuplicateRound) && step >= 2 && (
         <motion.div
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="fixed bottom-12 flex items-center gap-4 bg-[#D92525]/20 border border-[#D92525] px-8 py-4 rounded-full z-20"
         >
           <Copy className="w-6 h-6 text-[#D92525]" />
-          <span className="text-[#D92525] font-bold tracking-widest">DUPLICATE DETECTED: -2 PTS ALL</span>
+          <span className="text-[#D92525] font-bold tracking-widest">ROUND VOIDED: GLOBAL PENALTY</span>
         </motion.div>
       )}
     </div>
@@ -1464,6 +1502,60 @@ const ResultsPhase = ({
   );
 };
 
+
+// ============== ELIMINATION SCREEN ==============
+const EliminationScreen = ({ gameState }: { gameState: GameState }) => {
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black">
+      {/* Clear/Brightened Background - Removing the dark overlay effect by using a different blend or just raw image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-50 contrast-125 saturate-0"
+        style={{ backgroundImage: 'url("/joker-bg.png")' }}
+      />
+
+      {/* Glitch Overlay */}
+      <div className="absolute inset-0 noise-overlay opacity-50 mix-blend-overlay" />
+
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1, ease: "circOut" }}
+        className="relative z-10 text-center p-12 border-y-4 border-[#D92525] bg-black/80 backdrop-blur-md w-full"
+      >
+        <motion.div
+          animate={{ rotate: [-2, 2, -2] }}
+          transition={{ duration: 0.2, repeat: Infinity, repeatType: "mirror" }}
+          className="mb-8 inline-block"
+        >
+          <Skull className="w-32 h-32 text-[#D92525]" />
+        </motion.div>
+
+        <h1 className="text-6xl md:text-8xl font-bold text-[#D92525] tracking-widest mb-4 glitch-text" data-text="ELIMINATED">
+          ELIMINATED
+        </h1>
+
+        <p className="text-2xl md:text-4xl text-white font-mono tracking-[0.5em] uppercase">
+          THE JOKER HAS CLAIMED YOU
+        </p>
+
+        {gameState.currentTeamId && (
+          <div className="mt-8 text-xl text-[#D92525] font-mono">
+            FINAL SCORE: {gameState.teams.find(t => t.id === gameState.currentTeamId)?.score || -10}
+          </div>
+        )}
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="mt-12 text-gray-500"
+        >
+          Waiting for the game to end...
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+};
 
 // ============== GAME OVER PHASE ==============
 const GameOverPhase = ({ gameState }: { gameState: GameState }) => {
@@ -2037,7 +2129,13 @@ function App() {
 
       {/* Main Content */}
       <AnimatePresence mode="wait">
-        {gameState.phase === 'entrance' && (
+        {gameState.currentTeamId && gameState.teams.find(t => t.id === gameState.currentTeamId)?.isEliminated && (
+          <motion.div key="eliminated" className="relative z-[9999]">
+            <EliminationScreen gameState={gameState} />
+          </motion.div>
+        )}
+
+        {gameState.phase === 'entrance' && !gameState.currentTeamId && (
           <EntranceScreen key="entrance" onEnter={handleEnterGame} onAdminClick={() => setShowAdmin(true)} />
         )}
         {gameState.phase === 'rules' && (
