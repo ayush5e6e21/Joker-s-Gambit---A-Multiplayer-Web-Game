@@ -24,14 +24,6 @@ app.use(express.json());
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'dist')));
-
-  app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  });
-} else {
-  app.get('/', (req, res) => {
-    res.send('Backend is running! Please access the game at http://localhost:5173');
-  });
 }
 
 // Game States
@@ -953,6 +945,17 @@ app.post('/api/admin/settings', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', rooms: rooms.size });
 });
+
+// Catch-all route (must be last)
+if (process.env.NODE_ENV === 'production') {
+  app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.send('Backend is running! Please access the game at http://localhost:5173');
+  });
+}
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
