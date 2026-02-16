@@ -1368,6 +1368,60 @@ const TrialPhase = ({
   );
 };
 
+// ============== SAFE SCREEN (SANCTUARY) ==============
+const SafeScreen = () => {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 bg-[#020a05]">
+        <div className="absolute inset-0 bg-green-500/5 noise-overlay mix-blend-overlay opacity-30" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-green-500/10 blur-[100px] rounded-full opacity-30" />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1 }}
+        className="relative z-10 max-w-4xl w-full text-center"
+      >
+        {/* Eye/Shield Icon */}
+        <div className="relative mb-12 inline-block">
+          <motion.div
+            animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute inset-0 bg-green-500/20 blur-xl rounded-full"
+          />
+          <Shield className="w-32 h-32 text-green-500/80 relative z-10 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
+          <motion.div
+            initial={{ width: "0%" }}
+            animate={{ width: "100%" }}
+            transition={{ delay: 0.5, duration: 1 }}
+            className="absolute bottom-0 left-0 h-1 bg-green-500/50"
+          />
+        </div>
+
+        <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-green-300 to-green-700 tracking-widest mb-6 font-mono">
+          SANCTUARY
+        </h1>
+
+        <div className="flex items-center justify-center gap-4 mb-12">
+          <div className="h-px w-24 bg-gradient-to-r from-transparent to-green-500/50" />
+          <p className="text-xl md:text-2xl text-green-500/60 font-mono tracking-[0.2em] uppercase">
+            HIDDEN FROM THE JOKER
+          </p>
+          <div className="h-px w-24 bg-gradient-to-l from-transparent to-green-500/50" />
+        </div>
+
+        <div className="p-8 border border-green-500/20 bg-green-900/5 rounded-xl backdrop-blur-sm max-w-xl mx-auto">
+          <p className="text-gray-400 animate-pulse tracking-widest text-sm">
+            WAITING FOR SURVIVORS...
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 // ============== RESULTS PHASE ==============
 const ResultsPhase = ({
   gameState,
@@ -1385,7 +1439,7 @@ const ResultsPhase = ({
   const myTeam = gameState.teams.find(t => t.id === gameState.currentTeamId);
   const isRedZone = myTeam && gameState.redZoneTeams.includes(myTeam.id);
   const isWrong = myTeam && gameState.wrongPlayers?.includes(myTeam.id);
-  // If in red zone and NOT wrong, then Correct. If Green Zone, then Safe.
+  const isDuplicate = gameState.duplicatePenaltyActive;
 
   useEffect(() => {
     const timer = setTimeout(() => setShowFeedback(false), 3500);
@@ -1397,11 +1451,16 @@ const ResultsPhase = ({
     let colorClass = "";
     let subMessage = "";
 
-    if (!isRedZone) {
+    if (isDuplicate) {
+      // Handle Duplicate Case - Override everything else
+      message = "VOID";
+      colorClass = "text-[#D92525]";
+      subMessage = "-2 PENALTY APPLIED";
+    } else if (!isRedZone) {
       // Green Zone - Safe
       message = "SAFE";
       colorClass = "text-green-500";
-      subMessage = "NO TRIAL REQUIRED";
+      subMessage = "SANCTUARY GRANTED";
     } else {
       if (isWrong) {
         message = "WRONG";
@@ -1421,10 +1480,13 @@ const ResultsPhase = ({
           animate={{ scale: 1, opacity: 1 }}
           className="text-center"
         >
-          <h1 className={`text-[12rem] leading-none font-bold mb-8 tracking-tighter ${colorClass} glow-red`}>
+          <h1 className={`text-[10rem] md:text-[12rem] leading-none font-bold mb-8 tracking-tighter ${colorClass} glow-red`}>
             {message}
           </h1>
-          <p className="text-4xl text-gray-400 tracking-[1em] font-bold">{subMessage}</p>
+          <p className="text-2xl md:text-4xl text-gray-400 tracking-[1em] font-bold uppercase">{subMessage}</p>
+          {isDuplicate && (
+            <p className="text-xl text-[#D92525] mt-4 font-mono">DUPLICATE NUMBERS DETECTED</p>
+          )}
         </motion.div>
       </div>
     );
@@ -2193,18 +2255,7 @@ function App() {
               />
             ) : (
               // Safe Zone (Green) View
-              <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="bg-green-900/20 border-2 border-green-500 rounded-2xl p-12 max-w-2xl"
-                >
-                  <Shield className="w-24 h-24 text-green-500 mx-auto mb-6" />
-                  <h2 className="text-5xl font-bold text-white mb-4">YOU ARE SAFE</h2>
-                  <p className="text-2xl text-green-400 mb-8">Relax and enjoy the show.</p>
-                  <div className="text-gray-500 animate-pulse">Waiting for Host...</div>
-                </motion.div>
-              </div>
+              <SafeScreen />
             )
           )
         )}
