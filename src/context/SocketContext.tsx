@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import type { GameState, TrialQuestion } from '@/types';
+
 
 interface SocketContextType {
     socket: Socket | null;
@@ -20,7 +20,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         // Connect to backend
-        const socketInstance = io('http://localhost:3001', {
+        // In production, we use the environment variable. In development, we fallback to localhost:3001
+        // or the environment variable if set in .env
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+        console.log('Connecting to backend at:', backendUrl);
+
+        const socketInstance = io(backendUrl, {
             transports: ['websocket'],
             autoConnect: true,
         });
