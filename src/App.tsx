@@ -1359,7 +1359,7 @@ const TrialPhase = ({
             SUBMIT ANSWER
           </Button>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 };
