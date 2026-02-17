@@ -840,11 +840,7 @@ const PredictionPhase = ({
         </motion.div>
       )}
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="text-center"
-      >
+      <div className="text-center">
         <h2 className="text-5xl font-bold mb-4">PREDICTION PHASE</h2>
         <p className="text-xl text-gray-500 mb-12">
           Choose a number from 0 to 100. Closest to the target wins safety.
@@ -871,7 +867,7 @@ const PredictionPhase = ({
             <Button
               onClick={handleSubmit}
               disabled={number === ''}
-              className="btn-horror px-12 py-6 text-xl bg-[#D92525] hover:bg-[#b91c1c] text-white rounded-none disabled:opacity-50"
+              className="px-12 py-6 text-xl bg-[#D92525] hover:bg-[#b91c1c] text-white rounded-none disabled:opacity-50"
               data-cursor-hover
             >
               SUBMIT PREDICTION
@@ -902,7 +898,7 @@ const PredictionPhase = ({
             />
           ))}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
