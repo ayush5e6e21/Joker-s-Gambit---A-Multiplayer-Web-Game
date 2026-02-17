@@ -806,7 +806,7 @@ const PredictionPhase = ({
         rightContent={
           <div className="flex flex-col items-end">
             <p className="text-white/40 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
-            <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 10 ? 'osd-text-red animate-pulse' : 'osd-text-white'}`}>
+            <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 10 ? 'osd-text-red' : 'osd-text-white'}`}>
               {gameState.timeRemaining.toString().padStart(2, '0')}s
             </div>
           </div>
@@ -1301,7 +1301,7 @@ const TrialPhase = ({
         rightContent={
           <div className="flex flex-col items-end">
             <p className="text-white/40 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
-            <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 5 ? 'osd-text-red animate-pulse' : 'osd-text-white'}`}>
+            <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 5 ? 'osd-text-red' : 'osd-text-white'}`}>
               {gameState.timeRemaining.toString().padStart(2, '0')}s
             </div>
           </div>
@@ -1414,7 +1414,7 @@ const SafeScreen = () => {
         </div>
 
         <div className="p-8 border border-green-500/20 bg-green-900/5 rounded-xl backdrop-blur-sm max-w-xl mx-auto">
-          <p className="text-gray-400 animate-pulse tracking-widest text-sm">
+          <p className="text-gray-400 tracking-widest text-sm">
             WAITING FOR SURVIVORS...
           </p>
         </div>
@@ -1549,14 +1549,14 @@ const ResultsPhase = ({
           <div className="flex justify-center">
             <Button
               onClick={onNextRound}
-              className="px-12 py-6 text-2xl bg-[#D92525] hover:bg-[#b91c1c] text-white rounded-none glow-red tracking-widest"
+              className="px-12 py-6 text-2xl bg-[#D92525] hover:bg-[#b91c1c] text-white rounded-none tracking-widest"
               data-cursor-hover
             >
               START NEXT ROUND
             </Button>
           </div>
         ) : (
-          <p className="text-center text-gray-500 animate-pulse text-xl tracking-widest">
+          <p className="text-center text-gray-500 text-xl tracking-widest">
             WAITING FOR HOST...
           </p>
         )}
@@ -1772,7 +1772,7 @@ const SpectatorView = ({
                 <div className="w-px h-8 bg-gray-800" />
                 <div className="text-right">
                   <p className="text-xs text-gray-500 tracking-widest">TIMER</p>
-                  <p className={`text-2xl font-bold font-mono ${gameState.timeRemaining <= 10 ? 'text-[#D92525] animate-pulse' : 'text-white'}`}>
+                  <p className={`text-2xl font-bold font-mono ${gameState.timeRemaining <= 10 ? 'text-[#D92525]' : 'text-white'}`}>
                     {gameState.timeRemaining}s
                   </p>
                 </div>
@@ -2228,7 +2228,7 @@ function App() {
             />
           ) : (
             <PredictionPhase
-              key="prediction"
+              key={`prediction-${gameState.round}`}
               gameState={gameState}
               onSubmit={handleSubmitPrediction}
             />

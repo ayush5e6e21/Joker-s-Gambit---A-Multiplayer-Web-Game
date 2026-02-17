@@ -713,7 +713,7 @@ function applyDuplicatePenalty(room) {
   // Apply -2 to all players
   room.players.forEach(player => {
     if (!player.isEliminated) {
-      player.score -= room.settings.duplicatePenalty;
+      player.score = Math.max(-10, player.score - room.settings.duplicatePenalty);
     }
   });
 
@@ -779,7 +779,7 @@ function endTrialPhase(room) {
       wrongPlayers.push(playerId);
       const player = room.players.find(p => p.id === playerId);
       if (player) {
-        player.score -= room.settings.trialPenalty;
+        player.score = Math.max(-10, player.score - room.settings.trialPenalty);
       }
     }
   });
