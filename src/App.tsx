@@ -853,9 +853,14 @@ const PredictionPhase = ({
                 type="number"
                 value={number}
                 onChange={(e) => {
-                  const val = parseInt(e.target.value) || '';
-                  if (val === '' || (val >= 0 && val <= 100)) {
-                    setNumber(val);
+                  const val = e.target.value;
+                  if (val === '') {
+                    setNumber('');
+                  } else {
+                    const num = parseInt(val);
+                    if (!isNaN(num) && num >= 0 && num <= 100) {
+                      setNumber(num);
+                    }
                   }
                 }}
                 placeholder="0-100"
@@ -1291,9 +1296,7 @@ const TrialPhase = ({
       {/* Header With Large Timer */}
       <GameNavbar
         leftContent={null}
-        centerContent={
-          <h2 className="text-xl font-bold tracking-[0.3em] text-white/30 mt-2">TRIAL PHASE</h2>
-        }
+        centerContent={null}
         rightContent={
           <div className="flex flex-col items-end">
             <p className="text-white/40 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
