@@ -781,7 +781,7 @@ const PredictionPhase = ({
           <div className="flex items-center gap-10">
             {/* Round */}
             <div className="flex flex-col items-center">
-              <p className="text-white/40 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">ROUND</p>
+              <p className="text-gray-500 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">ROUND</p>
               <p className="text-5xl font-mono font-bold leading-none osd-text-red">
                 {gameState.round.toString()}
               </p>
@@ -793,7 +793,7 @@ const PredictionPhase = ({
             <div className="flex gap-8">
               {gameState.teams.map(team => (
                 <div key={team.id} className="flex flex-col items-center">
-                  <span className="text-[10px] text-white/40 font-semibold tracking-[0.2em] uppercase mb-1">{team.name}</span>
+                  <span className="text-[10px] text-gray-500 font-semibold tracking-[0.2em] uppercase mb-1">{team.name}</span>
                   <span className={`text-3xl font-mono font-bold leading-none ${team.score < 0 ? 'osd-text-red' : 'osd-text-green'}`}>
                     {team.score}
                   </span>
@@ -805,7 +805,7 @@ const PredictionPhase = ({
         centerContent={null}
         rightContent={
           <div className="flex flex-col items-end">
-            <p className="text-white/40 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
+            <p className="text-gray-500 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
             <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 10 ? 'osd-text-red' : 'osd-text-white'}`}>
               {gameState.timeRemaining.toString().padStart(2, '0')}s
             </div>
@@ -1299,7 +1299,7 @@ const TrialPhase = ({
         centerContent={null}
         rightContent={
           <div className="flex flex-col items-end">
-            <p className="text-white/40 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
+            <p className="text-gray-500 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
             <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 5 ? 'osd-text-red' : 'osd-text-white'}`}>
               {gameState.timeRemaining.toString().padStart(2, '0')}s
             </div>
@@ -1383,8 +1383,6 @@ const SafeScreen = () => {
         {/* Eye/Shield Icon */}
         <div className="relative mb-12 inline-block">
           <motion.div
-            animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 4, repeat: Infinity }}
             className="absolute inset-0 bg-green-500/20 blur-xl rounded-full"
           />
           <Shield className="w-32 h-32 text-green-500/80 relative z-10 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
