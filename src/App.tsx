@@ -2043,7 +2043,8 @@ function App() {
         greenZoneTeam: null,
         redZoneTeams: [],
         trialQuestion: null,
-        duplicateDetected: false
+        duplicateDetected: false,
+        duplicatePenaltyActive: false
       }));
       setSubmittedTeams(new Set());
     });

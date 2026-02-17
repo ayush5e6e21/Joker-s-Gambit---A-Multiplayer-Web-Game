@@ -680,7 +680,10 @@ function endNumberSelectionPhase(room) {
   });
 
   // Move to zone assignment after delay (13 seconds now: 10s animation + 3s pause)
+  const currentRound = room.round;
   setTimeout(() => {
+    if (room.round !== currentRound) return;
+
     room.state = GAME_STATES.ZONE_ASSIGNMENT;
     io.to(room.code).emit('zoneAssignment', {
       greenPlayer: room.greenPlayer,
@@ -691,11 +694,13 @@ function endNumberSelectionPhase(room) {
     // Apply duplicate penalty if exists
     if (room.duplicateNumbers.length > 0) {
       setTimeout(() => {
+        if (room.round !== currentRound) return;
         applyDuplicatePenalty(room);
       }, 4000);
     } else {
       // Pause for 8 seconds to allow for sorting animation
       setTimeout(() => {
+        if (room.round !== currentRound) return;
         startTrialPhase(room);
       }, 8000);
     }
@@ -718,7 +723,9 @@ function applyDuplicatePenalty(room) {
     players: room.players
   });
 
+  const currentRound = room.round;
   setTimeout(() => {
+    if (room.round !== currentRound) return;
     // Skip trial if duplicates found, go straight to results
     updateScores(room, []);
   }, 4000);
@@ -789,7 +796,9 @@ function updateScores(room, wrongPlayers) {
     trialQuestion: room.currentQuestion
   });
 
+  const currentRound = room.round;
   setTimeout(() => {
+    if (room.round !== currentRound) return;
     checkEliminations(room);
   }, 5000);
 }
@@ -813,7 +822,9 @@ function checkEliminations(room) {
     eliminatedCount: room.eliminatedPlayers.length
   });
 
+  const currentRound = room.round;
   setTimeout(() => {
+    if (room.round !== currentRound) return;
     checkGameEnd(room);
   }, 4000);
 }
