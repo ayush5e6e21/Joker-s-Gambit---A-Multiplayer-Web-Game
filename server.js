@@ -5,6 +5,7 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import trialQuestions from './trialQuestions.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,6 +58,37 @@ const gameSettings = {
   eliminationScore: 10,
   maxPlayers: 5
 };
+
+// Database persistence
+const DB_FILE = path.join(__dirname, 'questions.json');
+
+// Initialize questions from "database" (JSON file)
+try {
+  if (fs.existsSync(DB_FILE)) {
+    const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    if (data.adminQuestions) adminQuestions.push(...data.adminQuestions);
+    if (data.deletedBuiltInIds) {
+      data.deletedBuiltInIds.forEach(id => deletedBuiltInIds.add(id));
+    }
+    if (data.questionOrder) questionOrder = data.questionOrder;
+    console.log('[DEBUG] Loaded questions database from disk');
+  }
+} catch (e) {
+  console.error('[ERROR] Failed to load questions database:', e);
+}
+
+function saveDatabase() {
+  try {
+    const data = {
+      adminQuestions,
+      deletedBuiltInIds: Array.from(deletedBuiltInIds),
+      questionOrder
+    };
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[ERROR] Failed to save questions database:', e);
+  }
+}
 
 // Generate room code
 function generateRoomCode() {
@@ -637,6 +669,7 @@ io.on('connection', (socket) => {
     if (questionOrder) {
       questionOrder.push(question.id);
     }
+    saveDatabase();
     callback({ success: true, questionId: question.id });
   });
 
@@ -666,6 +699,7 @@ io.on('connection', (socket) => {
     if (questionOrder) {
       questionOrder = questionOrder.filter(id => id !== questionId);
     }
+    saveDatabase();
     callback({ success: true });
   });
 
@@ -679,6 +713,7 @@ io.on('connection', (socket) => {
       [ids[i], ids[j]] = [ids[j], ids[i]];
     }
     questionOrder = ids;
+    saveDatabase();
     const shuffled = getAllActiveQuestions();
     callback({ success: true, questions: shuffled });
   });
@@ -701,6 +736,7 @@ io.on('connection', (socket) => {
     }
     // Swap
     [questionOrder[idx], questionOrder[newIdx]] = [questionOrder[newIdx], questionOrder[idx]];
+    saveDatabase();
     const reordered = getAllActiveQuestions();
     callback({ success: true, questions: reordered });
   });
@@ -724,6 +760,9 @@ io.on('connection', (socket) => {
     const builtInQ = trialQuestions.find(q => q.id === questionId);
     if (builtInQ) {
       builtInQ.timeLimit = timeLimit || undefined;
+      // Note: modifications to built-ins aren't serialized to the generic file yet
+      // unless we refactored slightly. But since they want to persist added/removed:
+      saveDatabase();
       if (callback) callback({ success: true });
       return;
     }
@@ -1165,6 +1204,8 @@ app.post('/api/admin/questions', (req, res) => {
   };
 
   adminQuestions.push(newQuestion);
+  if (questionOrder) questionOrder.push(newQuestion.id);
+  saveDatabase();
   res.json({ success: true, question: newQuestion });
 });
 
@@ -1172,6 +1213,8 @@ app.delete('/api/admin/questions/:id', (req, res) => {
   const index = adminQuestions.findIndex(q => q.id === req.params.id);
   if (index > -1) {
     adminQuestions.splice(index, 1);
+    if (questionOrder) questionOrder = questionOrder.filter(id => id !== req.params.id);
+    saveDatabase();
     res.json({ success: true });
   } else {
     res.status(404).json({ success: false, error: 'Question not found' });
