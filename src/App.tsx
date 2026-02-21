@@ -20,6 +20,13 @@ import { Input } from '@/components/ui/input';
 import type { GameState } from '@/types';
 import { SocketProvider, useSocket } from './context/SocketContext';
 
+// Helper to format seconds as MM:SS
+const formatTime = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
+
 // ... (Existing CustomCursor, EntranceScreen, etc. keep unchanged)
 
 
@@ -807,7 +814,7 @@ const PredictionPhase = ({
           <div className="flex flex-col items-end">
             <p className="text-gray-300 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
             <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 10 ? 'osd-text-red' : 'osd-text-white'}`}>
-              {gameState.timeRemaining.toString().padStart(2, '0')}s
+              {formatTime(gameState.timeRemaining)}
             </div>
           </div>
         }
@@ -1308,7 +1315,7 @@ const TrialPhase = ({
           <div className="flex flex-col items-end">
             <p className="text-gray-500 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
             <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 5 ? 'osd-text-red' : 'osd-text-white'}`}>
-              {gameState.timeRemaining.toString().padStart(2, '0')}s
+              {formatTime(gameState.timeRemaining)}
             </div>
           </div>
         }
@@ -1831,7 +1838,7 @@ const SpectatorView = ({
                 <div className="text-right">
                   <p className="text-xs text-gray-500 tracking-widest">TIMER</p>
                   <p className={`text-2xl font-bold font-mono ${gameState.timeRemaining <= 10 ? 'text-[#D92525]' : 'text-white'}`}>
-                    {gameState.timeRemaining}s
+                    {formatTime(gameState.timeRemaining)}
                   </p>
                 </div>
               </div>

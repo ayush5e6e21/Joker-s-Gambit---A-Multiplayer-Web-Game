@@ -11,7 +11,7 @@
         "Stove"
       ],
       "correctAnswer": 1,
-      "timeLimit": 12
+      "timeLimit": 30
     },
     {
       "id": "1e977fea-3ed1-49eb-b2ab-0bb060b2bfe2",
@@ -37,7 +37,7 @@
         "144"
       ],
       "correctAnswer": 0,
-      "timeLimit": 25
+      "timeLimit": 35
     },
     {
       "id": "90dfccfe-ff4a-4d0e-921f-a66cdb6b97b4",
@@ -109,7 +109,7 @@
         "5"
       ],
       "correctAnswer": 0,
-      "timeLimit": 15
+      "timeLimit": 30
     },
     {
       "id": "857a5ae7-a598-49b6-9823-f7d07b3038cf",
