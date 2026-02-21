@@ -2,6 +2,8 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
 import { fileURLToPath } from 'url';
 import trialQuestions from './trialQuestions.js';
 
