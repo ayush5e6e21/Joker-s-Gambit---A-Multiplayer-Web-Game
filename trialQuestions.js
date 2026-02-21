@@ -8,7 +8,7 @@ const trialQuestions = [
         type: "mcq",
         question: "What is 8 ÷ 2(2+2)?",
         options: ["1", "8", "16", "32"],
-        correctAnswer: 2
+        correctAnswer: 1
     },
 
     // Q2 — Riddle (Text — admin reviewed)

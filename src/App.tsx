@@ -1974,6 +1974,56 @@ const SpectatorView = ({
   );
 };
 
+// ============== CHEAT WARNING OVERLAY ==============
+const CheatWarningOverlay = ({ cheatCount, onClose }: { cheatCount: number, onClose: () => void }) => {
+  return (
+    <div className="fixed inset-0 z-[10005] flex flex-col items-center justify-center bg-black bg-opacity-95 backdrop-blur-md">
+      <div className="absolute inset-0 noise-overlay opacity-50 mix-blend-overlay pointer-events-none" />
+      <div className="absolute inset-0 scanlines opacity-50 pointer-events-none" />
+
+      <motion.div
+        initial={{ scale: 1.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        transition={{ duration: 0.1, type: "spring", stiffness: 200, damping: 10 }}
+        className="relative z-10 text-center p-12 border-4 border-[#D92525] bg-black/80 w-full max-w-4xl shadow-[0_0_100px_rgba(217,37,37,0.6)]"
+      >
+        <motion.div
+          animate={{ rotate: [-5, 5, -5] }}
+          transition={{ duration: 0.1, repeat: Infinity, repeatType: "mirror" }}
+          className="mb-8 inline-block drop-shadow-[0_0_20px_rgba(217,37,37,1)]"
+        >
+          <Skull className="w-40 h-40 text-[#D92525]" />
+        </motion.div>
+
+        <h1 className="text-6xl md:text-8xl font-bold text-[#D92525] tracking-widest mb-6 glitch-text" data-text="WARNING">
+          WARNING
+        </h1>
+
+        <p className="text-3xl md:text-5xl text-white font-mono tracking-[0.2em] uppercase mb-12">
+          DO NOT LEAVE THE BORDERLAND
+        </p>
+
+        <div className="text-xl md:text-2xl text-[#D92525] font-mono mb-12">
+          <p>TAB SWITCHING DETECTED.</p>
+          {cheatCount >= 4 ? (
+            <p className="mt-4 font-bold animate-pulse text-3xl">PENALTY APPLIED: -2 POINTS</p>
+          ) : (
+            <p className="mt-4">OFFENSE {cheatCount} / 3 BEFORE PENALTY.</p>
+          )}
+        </div>
+
+        <Button
+          onClick={onClose}
+          className="btn-horror px-12 py-6 text-2xl bg-[#D92525] hover:bg-black hover:text-[#D92525] border-2 border-[#D92525] text-white rounded-none transition-all duration-300"
+        >
+          I UNDERSTAND
+        </Button>
+      </motion.div>
+    </div>
+  );
+};
+
 // ============== MAIN APP ==============
 function App() {
   const [gameState, setGameState] = useState<GameState>({
@@ -1999,7 +2049,47 @@ function App() {
   const [isSpectator, setIsSpectator] = useState(false);
   const [submittedTeams, setSubmittedTeams] = useState<Set<string>>(new Set());
 
+  // Anti-Cheat State
+  const [showCheatWarning, setShowCheatWarning] = useState(false);
+  const [cheatCount, setCheatCount] = useState(0);
+
   const { socket } = useSocket();
+
+  // Anti-Cheat Tab Switching Listener
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Only track if hidden, and game is actively running for a player
+      if (
+        document.hidden &&
+        !isHost &&
+        !isSpectator &&
+        gameState.currentTeamId &&
+        gameState.phase !== 'entrance' &&
+        gameState.phase !== 'lobby' &&
+        gameState.phase !== 'game-over'
+      ) {
+        setCheatCount(prev => {
+          const newCount = prev + 1;
+
+          if (newCount >= 4) {
+            // Send penalty to server
+            if (socket) {
+              socket.emit('tabSwitchPenalty', gameState.roomCode);
+            }
+          }
+
+          return newCount;
+        });
+
+        setShowCheatWarning(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [gameState.phase, gameState.currentTeamId, gameState.roomCode, isHost, isSpectator, socket]);
 
   // Socket Event Listeners
   useEffect(() => {
@@ -2317,6 +2407,14 @@ function App() {
       {/* Main Content - z-index above overlays so vignette/scanlines/noise only darken the background */}
       <div className="relative z-[10000]">
         <AnimatePresence mode="wait">
+          {showCheatWarning && (
+            <CheatWarningOverlay
+              key="cheat-warning"
+              cheatCount={cheatCount}
+              onClose={() => setShowCheatWarning(false)}
+            />
+          )}
+
           {gameState.currentTeamId && gameState.teams.find(t => t.id === gameState.currentTeamId)?.isEliminated && (
             <motion.div key="eliminated" className="relative z-[9999]">
               <EliminationScreen gameState={gameState} />
