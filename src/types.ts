@@ -13,9 +13,10 @@ export interface Team {
 export interface TrialQuestion {
     id: string;
     question: string;
-    options: string[];
-    correctAnswer: number;
-    timeLimit: number;
+    type?: 'mcq' | 'text';
+    options?: string[];
+    correctAnswer?: number | null;
+    timeLimit?: number;
 }
 
 export interface GameState {

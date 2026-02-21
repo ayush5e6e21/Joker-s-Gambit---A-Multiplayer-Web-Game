@@ -1277,19 +1277,26 @@ const TrialPhase = ({
   onAnswer
 }: {
   gameState: GameState;
-  onAnswer: (answer: number) => void;
+  onAnswer: (answer: number | string) => void;
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [textAnswer, setTextAnswer] = useState('');
   // Time is now synced from server
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = () => {
     setSubmitted(true);
-    onAnswer(selectedAnswer ?? -1);
+    if (question?.type === 'text') {
+      onAnswer(textAnswer);
+    } else {
+      onAnswer(selectedAnswer ?? -1);
+    }
   };
 
   const question = gameState.trialQuestion;
   if (!question) return null;
+
+  const isTextQuestion = question.type === 'text';
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
@@ -1313,28 +1320,44 @@ const TrialPhase = ({
             <Swords className="w-8 h-8 text-[#D92525]" />
             <h2 className="text-3xl font-bold text-[#D92525] opacity-100">TRIAL PHASE</h2>
           </div>
-          <p className="text-gray-500">Answer correctly to avoid penalty</p>
+          <p className="text-gray-500">
+            {isTextQuestion ? 'Type your answer below' : 'Answer correctly to avoid penalty'}
+          </p>
         </div>
 
         <div className="game-card rounded-xl p-8 mb-8">
-          <p className="text-2xl text-center mb-8">{question.question}</p>
+          <p className="text-2xl text-center mb-8 whitespace-pre-line">{question.question}</p>
 
           {!submitted ? (
-            <div className="grid grid-cols-2 gap-4">
-              {question.options.map((option, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedAnswer(i)}
-                  className={`p-6 border-2 rounded-lg text-xl transition-all ${selectedAnswer === i
-                    ? 'border-[#D92525] bg-[#D92525]/20'
-                    : 'border-gray-700 hover:border-gray-500'
-                    }`}
-                  data-cursor-hover
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
+            isTextQuestion ? (
+              /* Text / Fill-in-the-blank input */
+              <div className="space-y-4">
+                <textarea
+                  value={textAnswer}
+                  onChange={(e) => setTextAnswer(e.target.value)}
+                  placeholder="Type your answer here..."
+                  rows={4}
+                  className="w-full p-4 bg-[#0a0a0a] border-2 border-gray-700 rounded-lg text-white text-lg focus:border-[#D92525] focus:outline-none resize-none transition-colors"
+                />
+              </div>
+            ) : (
+              /* MCQ options grid */
+              <div className="grid grid-cols-2 gap-4">
+                {question.options?.map((option, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedAnswer(i)}
+                    className={`p-6 border-2 rounded-lg text-xl transition-all ${selectedAnswer === i
+                      ? 'border-[#D92525] bg-[#D92525]/20'
+                      : 'border-gray-700 hover:border-gray-500'
+                      }`}
+                    data-cursor-hover
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )
           ) : (
             <div className="text-center py-8">
               <motion.div
@@ -1352,7 +1375,7 @@ const TrialPhase = ({
         {!submitted && (
           <Button
             onClick={handleSubmit}
-            disabled={selectedAnswer === null}
+            disabled={isTextQuestion ? !textAnswer.trim() : selectedAnswer === null}
             className="w-full py-6 text-xl bg-[#D92525] hover:bg-[#b91c1c] text-white rounded-none disabled:opacity-50"
             data-cursor-hover
           >
@@ -1692,6 +1715,32 @@ const SpectatorView = ({
 }) => {
   const { socket } = useSocket();
   const sortedTeams = [...gameState.teams].sort((a, b) => b.score - a.score);
+  const [textAnswers, setTextAnswers] = useState<{ playerId: string; playerName: string; answer: string }[]>([]);
+  const [judgments, setJudgments] = useState<Map<string, boolean>>(new Map());
+
+  const isTextQuestion = gameState.trialQuestion?.type === 'text';
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTextAnswers = (data: { answers: { playerId: string; playerName: string; answer: string }[] }) => {
+      setTextAnswers(data.answers);
+    };
+
+    const handleJudgmentsUpdated = (data: { judgments: { playerId: string; isCorrect: boolean }[] }) => {
+      const newMap = new Map<string, boolean>();
+      data.judgments.forEach(j => newMap.set(j.playerId, j.isCorrect));
+      setJudgments(newMap);
+    };
+
+    socket.on('textAnswersForReview', handleTextAnswers);
+    socket.on('adminJudgmentsUpdated', handleJudgmentsUpdated);
+
+    return () => {
+      socket.off('textAnswersForReview', handleTextAnswers);
+      socket.off('adminJudgmentsUpdated', handleJudgmentsUpdated);
+    };
+  }, [socket]);
 
   const handleForceEndTrial = () => {
     if (socket) {
@@ -1700,6 +1749,22 @@ const SpectatorView = ({
           if (!response.success) alert(response.error);
         });
       }
+    }
+  };
+
+  const handleJudgeAnswer = (playerId: string, isCorrect: boolean) => {
+    if (socket) {
+      socket.emit('adminJudgeTrialAnswer', gameState.roomCode, playerId, isCorrect, (response: any) => {
+        if (!response.success) alert(response.error);
+      });
+    }
+  };
+
+  const handleFinalizeTrial = () => {
+    if (socket) {
+      socket.emit('adminFinalizeTrial', gameState.roomCode, (response: any) => {
+        if (!response.success) alert(response.error);
+      });
     }
   };
 
@@ -1797,18 +1862,28 @@ const SpectatorView = ({
             {gameState.phase === 'trial' && (
               <div className="space-y-6">
                 <div className="bg-[#0a0a0a] p-6 rounded-lg border border-gray-800">
-                  <p className="text-gray-500 text-sm mb-2 tracking-widest">CURRENT QUESTION</p>
-                  <p className="text-2xl text-white">{gameState.trialQuestion?.question}</p>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    {gameState.trialQuestion?.options.map((opt, i) => (
-                      <div key={i} className={`p-3 rounded border border-gray-700 ${i === gameState.trialQuestion?.correctAnswer ? 'border-green-500/50 bg-green-500/10' : ''}`}>
-                        <span className="text-gray-500 mr-2">{String.fromCharCode(65 + i)})</span>
-                        <span className={i === gameState.trialQuestion?.correctAnswer ? 'text-green-500' : 'text-gray-300'}>{opt}</span>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-gray-500 text-sm tracking-widest">CURRENT QUESTION</p>
+                    {isTextQuestion && (
+                      <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded tracking-widest">OPEN-ENDED</span>
+                    )}
                   </div>
+                  <p className="text-2xl text-white whitespace-pre-line">{gameState.trialQuestion?.question}</p>
+
+                  {/* MCQ options (only for MCQ questions) */}
+                  {!isTextQuestion && gameState.trialQuestion?.options && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {gameState.trialQuestion.options.map((opt, i) => (
+                        <div key={i} className={`p-3 rounded border border-gray-700 ${i === gameState.trialQuestion?.correctAnswer ? 'border-green-500/50 bg-green-500/10' : ''}`}>
+                          <span className="text-gray-500 mr-2">{String.fromCharCode(65 + i)})</span>
+                          <span className={i === gameState.trialQuestion?.correctAnswer ? 'text-green-500' : 'text-gray-300'}>{opt}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
+                {/* Player submission status */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {gameState.redZoneTeams.map((teamId) => {
                     const team = gameState.teams.find(t => t.id === teamId);
@@ -1827,6 +1902,60 @@ const SpectatorView = ({
                     );
                   })}
                 </div>
+
+                {/* Text answer review section (only for text questions when answers come in) */}
+                {isTextQuestion && textAnswers.length > 0 && (
+                  <div className="border border-yellow-500/30 rounded-xl p-6 bg-yellow-500/5">
+                    <h4 className="text-lg font-bold text-yellow-400 tracking-widest mb-4">REVIEW ANSWERS</h4>
+                    <div className="space-y-4">
+                      {textAnswers.map((ta) => {
+                        const judged = judgments.has(ta.playerId);
+                        const isCorrect = judgments.get(ta.playerId);
+
+                        return (
+                          <div key={ta.playerId} className={`p-4 rounded-lg border ${judged ? (isCorrect ? 'border-green-500/50 bg-green-500/10' : 'border-[#D92525]/50 bg-[#D92525]/10') : 'border-gray-700 bg-[#0a0a0a]'}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-white font-bold">{ta.playerName}</span>
+                              {judged && (
+                                <span className={`text-xs tracking-widest font-bold ${isCorrect ? 'text-green-500' : 'text-[#D92525]'}`}>
+                                  {isCorrect ? 'CORRECT' : 'WRONG'}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-300 text-sm mb-3 whitespace-pre-line bg-[#050505] p-3 rounded">{ta.answer}</p>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => handleJudgeAnswer(ta.playerId, true)}
+                                className={`flex-1 py-2 text-sm rounded-none ${judged && isCorrect ? 'bg-green-600 text-white' : 'bg-green-600/20 text-green-500 border border-green-500/30 hover:bg-green-600 hover:text-white'}`}
+                              >
+                                ✓ CORRECT
+                              </Button>
+                              <Button
+                                onClick={() => handleJudgeAnswer(ta.playerId, false)}
+                                className={`flex-1 py-2 text-sm rounded-none ${judged && !isCorrect ? 'bg-[#D92525] text-white' : 'bg-[#D92525]/20 text-[#D92525] border border-[#D92525]/30 hover:bg-[#D92525] hover:text-white'}`}
+                              >
+                                ✗ WRONG
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Finalize button */}
+                    <div className="mt-6">
+                      <Button
+                        onClick={handleFinalizeTrial}
+                        className="w-full py-4 text-lg bg-yellow-500 hover:bg-yellow-600 text-black rounded-none tracking-widest font-bold"
+                      >
+                        REVEAL RESULTS
+                      </Button>
+                      <p className="text-center text-gray-600 mt-2 text-xs">
+                        * Un-judged answers will be marked as WRONG
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-center mt-8">
                   <Button
@@ -2155,7 +2284,7 @@ function App() {
 
 
 
-  const handleTrialAnswer = (answer: number) => {
+  const handleTrialAnswer = (answer: number | string) => {
     if (socket) {
       socket.emit('submitTrialAnswer', gameState.roomCode, answer, (response: any) => {
         if (!response.success) {

@@ -5,6 +5,7 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import trialQuestions from './trialQuestions.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +44,9 @@ const GAME_STATES = {
 // Store rooms and game data
 const rooms = new Map();
 const adminQuestions = [];
+const deletedBuiltInIds = new Set();
+// Track display order of question IDs (null = use default order)
+let questionOrder = null;
 const gameSettings = {
   numberSelectionTime: 60,
   trialTime: 180,
@@ -76,6 +80,9 @@ function createRoom(hostSocketId, customCode = null) {
     duplicateNumbers: [],
     currentQuestion: null,
     trialAnswers: new Map(),
+    trialAnswerTexts: new Map(),
+    adminJudgments: new Map(),
+    usedQuestionIds: new Set(),
     eliminatedPlayers: [],
     isJokerRound: false,
     jokerRoundNumber: null,
@@ -135,18 +142,54 @@ function findDuplicates(room) {
   return duplicates;
 }
 
-// Get random question for trial
-function getRandomQuestion() {
-  if (adminQuestions.length === 0) {
-    // Default questions if none added by admin
+// Get all active questions (built-in minus deleted + custom), respecting order
+function getAllActiveQuestions() {
+  const activeBuiltIn = trialQuestions.filter(q => !deletedBuiltInIds.has(q.id));
+  const all = [...activeBuiltIn, ...adminQuestions];
+
+  // If we have a custom order, sort by it
+  if (questionOrder && questionOrder.length > 0) {
+    const orderMap = new Map();
+    questionOrder.forEach((id, idx) => orderMap.set(id, idx));
+    all.sort((a, b) => {
+      const oa = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
+      const ob = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
+      return oa - ob;
+    });
+  }
+
+  return all;
+}
+
+// Get random question for trial from the combined pool
+function getRandomQuestion(room) {
+  const allQuestions = getAllActiveQuestions();
+
+  if (allQuestions.length === 0) {
+    // Fallback if everything was deleted
     return {
-      id: uuidv4(),
-      question: "What is 8 ÷ 2(2+2)?",
-      options: ["1", "4", "8", "16"],
+      id: 'fallback',
+      type: 'mcq',
+      question: 'What is 2 + 2?',
+      options: ['3', '4', '5', '6'],
       correctAnswer: 1
     };
   }
-  return adminQuestions[Math.floor(Math.random() * adminQuestions.length)];
+
+  // Filter out already-used questions this session
+  const availableQuestions = allQuestions.filter(q => !room.usedQuestionIds.has(q.id));
+
+  if (availableQuestions.length === 0) {
+    // All used, reset
+    room.usedQuestionIds.clear();
+    const q = allQuestions[Math.floor(Math.random() * allQuestions.length)];
+    room.usedQuestionIds.add(q.id);
+    return { ...q };
+  }
+
+  const q = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+  room.usedQuestionIds.add(q.id);
+  return { ...q };
 }
 
 // Socket.IO connection handling
@@ -392,8 +435,8 @@ io.on('connection', (socket) => {
 
 
 
-  // Submit trial answer (player)
-  socket.on('submitTrialAnswer', (roomCode, answerIndex, callback) => {
+  // Submit trial answer (player) — supports both MCQ index and text answer
+  socket.on('submitTrialAnswer', (roomCode, answer, callback) => {
     const room = getRoom(roomCode);
 
     if (!room || room.state !== GAME_STATES.TRIAL) {
@@ -406,7 +449,13 @@ io.on('connection', (socket) => {
       return;
     }
 
-    room.trialAnswers.set(socket.id, answerIndex);
+    // Store answer — for MCQ it's a number (index), for text it's a string
+    if (room.currentQuestion && room.currentQuestion.type === 'text') {
+      room.trialAnswerTexts.set(socket.id, answer);
+      room.trialAnswers.set(socket.id, answer); // also set in trialAnswers for completion check
+    } else {
+      room.trialAnswers.set(socket.id, answer);
+    }
 
     // Mark player as having submitted
     const player = room.players.find(p => p.id === socket.id);
@@ -421,8 +470,49 @@ io.on('connection', (socket) => {
     // Also emit updatePlayers so AdminPanel gets the new status immediately
     io.to(roomCode).emit('updatePlayers', room.players);
 
+    // For text questions, send answers to admin/spectator for review
+    if (room.currentQuestion && room.currentQuestion.type === 'text') {
+      const textAnswers = [];
+      room.trialAnswerTexts.forEach((text, playerId) => {
+        const p = room.players.find(pl => pl.id === playerId);
+        textAnswers.push({ playerId, playerName: p?.name || 'Unknown', answer: text });
+      });
+      io.to(room.code).emit('textAnswersForReview', { answers: textAnswers });
+    }
+
     // Check if all red players submitted
     checkTrialCompletion(room);
+  });
+
+  // Admin judges text answers for a player
+  socket.on('adminJudgeTrialAnswer', (roomCode, playerId, isCorrect, callback) => {
+    const room = getRoom(roomCode);
+    if (!room) {
+      if (callback) callback({ success: false, error: 'Room not found' });
+      return;
+    }
+
+    room.adminJudgments.set(playerId, isCorrect);
+    if (callback) callback({ success: true });
+
+    // Emit updated judgments to admin
+    const judgments = [];
+    room.adminJudgments.forEach((correct, pid) => {
+      judgments.push({ playerId: pid, isCorrect: correct });
+    });
+    io.to(room.code).emit('adminJudgmentsUpdated', { judgments });
+  });
+
+  // Admin finalizes text question review and ends trial
+  socket.on('adminFinalizeTrial', (roomCode, callback) => {
+    const room = getRoom(roomCode);
+    if (!room || room.state !== GAME_STATES.TRIAL) {
+      if (callback) callback({ success: false, error: 'Not in trial phase' });
+      return;
+    }
+
+    endTrialPhase(room);
+    if (callback) callback({ success: true });
   });
 
   function checkTrialCompletion(room) {
@@ -441,10 +531,17 @@ io.on('connection', (socket) => {
 
     console.log(`[DEBUG] Trial Check: ${submittedCount}/${connectedRedPlayers.length} submitted`);
 
-    // If everyone submitted (and there is at least 1 person), end trial
+    // If everyone submitted (and there is at least 1 person)
     if (connectedRedPlayers.length > 0 && submittedCount === connectedRedPlayers.length) {
-      console.log(`[DEBUG] All trial answers received. Ending trial phase.`);
-      endTrialPhase(room);
+      console.log(`[DEBUG] All trial answers received.`);
+      // For text questions, don't auto-end — wait for admin review
+      if (room.currentQuestion && room.currentQuestion.type === 'text') {
+        console.log(`[DEBUG] Text question — waiting for admin to finalize.`);
+        io.to(room.code).emit('allTextAnswersSubmitted');
+      } else {
+        console.log(`[DEBUG] MCQ — auto-ending trial phase.`);
+        endTrialPhase(room);
+      }
     } else if (connectedRedPlayers.length === 0) {
       // If no one is left in trial (everyone disconnected), end it
       console.log(`[DEBUG] No active players in trial. Ending.`);
@@ -509,38 +606,112 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Admin: Add question
+  // Admin: Add question (supports MCQ and text)
   socket.on('adminAddQuestion', (questionData, callback) => {
     const question = {
       id: uuidv4(),
+      type: questionData.type || 'mcq',
       question: questionData.question,
-      options: questionData.options,
-      correctAnswer: questionData.correctAnswer
+      options: questionData.type === 'text' ? undefined : questionData.options,
+      correctAnswer: questionData.type === 'text' ? null : questionData.correctAnswer,
+      timeLimit: questionData.timeLimit ? Number(questionData.timeLimit) : undefined
     };
     adminQuestions.push(question);
+    // Update order array
+    if (questionOrder) {
+      questionOrder.push(question.id);
+    }
     callback({ success: true, questionId: question.id });
   });
 
-  // Admin: Get questions
+  // Admin: Get all questions (built-in + custom)
   socket.on('adminGetQuestions', (callback) => {
-    callback({ success: true, questions: adminQuestions });
+    const allQuestions = getAllActiveQuestions();
+    callback({ success: true, questions: allQuestions });
   });
 
-  // Admin: Delete question
+  // Admin: Delete question (built-in or custom)
   socket.on('adminDeleteQuestion', (questionId, callback) => {
-    const index = adminQuestions.findIndex(q => q.id === questionId);
-    if (index > -1) {
-      adminQuestions.splice(index, 1);
-      callback({ success: true });
+    // Check if it's a custom question
+    const customIndex = adminQuestions.findIndex(q => q.id === questionId);
+    if (customIndex > -1) {
+      adminQuestions.splice(customIndex, 1);
     } else {
-      callback({ success: false, error: 'Question not found' });
+      // Check if it's a built-in question
+      const builtIn = trialQuestions.find(q => q.id === questionId);
+      if (builtIn) {
+        deletedBuiltInIds.add(questionId);
+      } else {
+        callback({ success: false, error: 'Question not found' });
+        return;
+      }
     }
+    // Remove from order array
+    if (questionOrder) {
+      questionOrder = questionOrder.filter(id => id !== questionId);
+    }
+    callback({ success: true });
+  });
+
+  // Admin: Shuffle questions
+  socket.on('adminShuffleQuestions', (callback) => {
+    const all = getAllActiveQuestions();
+    // Fisher-Yates shuffle on the IDs
+    const ids = all.map(q => q.id);
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    questionOrder = ids;
+    const shuffled = getAllActiveQuestions();
+    callback({ success: true, questions: shuffled });
+  });
+
+  // Admin: Reorder question (move up or down)
+  socket.on('adminReorderQuestion', (questionId, direction, callback) => {
+    // Initialize order if not set
+    if (!questionOrder) {
+      questionOrder = getAllActiveQuestions().map(q => q.id);
+    }
+    const idx = questionOrder.indexOf(questionId);
+    if (idx === -1) {
+      callback({ success: false, error: 'Question not found in order' });
+      return;
+    }
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (newIdx < 0 || newIdx >= questionOrder.length) {
+      callback({ success: false, error: 'Cannot move further' });
+      return;
+    }
+    // Swap
+    [questionOrder[idx], questionOrder[newIdx]] = [questionOrder[newIdx], questionOrder[idx]];
+    const reordered = getAllActiveQuestions();
+    callback({ success: true, questions: reordered });
   });
 
   // Admin: Update settings
   socket.on('adminUpdateSettings', (settings, callback) => {
     Object.assign(gameSettings, settings);
     callback({ success: true, settings: gameSettings });
+  });
+
+  // Admin: Update question timer
+  socket.on('adminUpdateQuestionTimer', (questionId, timeLimit, callback) => {
+    // Check custom questions first
+    const customQ = adminQuestions.find(q => q.id === questionId);
+    if (customQ) {
+      customQ.timeLimit = timeLimit || undefined;
+      if (callback) callback({ success: true });
+      return;
+    }
+    // Check built-in questions
+    const builtInQ = trialQuestions.find(q => q.id === questionId);
+    if (builtInQ) {
+      builtInQ.timeLimit = timeLimit || undefined;
+      if (callback) callback({ success: true });
+      return;
+    }
+    if (callback) callback({ success: false, error: 'Question not found' });
   });
 
   // Admin: Get settings
@@ -741,23 +912,35 @@ function startTrialPhase(room) {
 
   room.state = GAME_STATES.TRIAL;
   room.trialAnswers.clear();
-  room.currentQuestion = getRandomQuestion();
+  room.trialAnswerTexts.clear();
+  room.adminJudgments.clear();
+  room.currentQuestion = getRandomQuestion(room);
+
+  // Use per-question timeLimit if set, otherwise fall back to global trial time
+  const trialTimeForQuestion = room.currentQuestion.timeLimit || room.settings.trialTime;
 
   io.to(room.code).emit('trialStarted', {
     question: room.currentQuestion,
     redPlayers: room.redPlayers,
-    timeLimit: room.settings.trialTime
+    timeLimit: trialTimeForQuestion
   });
 
   // Start trial timer
-  let timeLeft = room.settings.trialTime;
+  let timeLeft = trialTimeForQuestion;
   room.trialTimer = setInterval(() => {
     timeLeft--;
     io.to(room.code).emit('trialTimerUpdate', timeLeft);
 
     if (timeLeft <= 0) {
       clearInterval(room.trialTimer);
-      endTrialPhase(room);
+      // For text questions, don't auto-end — wait for admin
+      if (room.currentQuestion && room.currentQuestion.type === 'text') {
+        // Stop the timer but wait for admin to finalize
+        room.trialTimer = null;
+        io.to(room.code).emit('trialTimerExpired');
+      } else {
+        endTrialPhase(room);
+      }
     }
   }, 1000);
 }
@@ -768,21 +951,36 @@ function endTrialPhase(room) {
     room.trialTimer = null;
   }
 
-  // Check answers
   const wrongPlayers = [];
 
-  room.redPlayers.forEach(playerId => {
-    const answerIndex = room.trialAnswers.get(playerId);
-    const isCorrect = answerIndex === room.currentQuestion.correctAnswer;
-
-    if (!isCorrect) {
-      wrongPlayers.push(playerId);
-      const player = room.players.find(p => p.id === playerId);
-      if (player) {
-        player.score = Math.max(-10, player.score - room.settings.trialPenalty);
+  if (room.currentQuestion && room.currentQuestion.type === 'text') {
+    // TEXT question: use admin judgments
+    room.redPlayers.forEach(playerId => {
+      const judgment = room.adminJudgments.get(playerId);
+      // If admin didn't judge (or marked wrong), it's wrong
+      if (!judgment) {
+        wrongPlayers.push(playerId);
+        const player = room.players.find(p => p.id === playerId);
+        if (player) {
+          player.score = Math.max(-10, player.score - room.settings.trialPenalty);
+        }
       }
-    }
-  });
+    });
+  } else {
+    // MCQ question: auto-check
+    room.redPlayers.forEach(playerId => {
+      const answerIndex = room.trialAnswers.get(playerId);
+      const isCorrect = answerIndex === room.currentQuestion.correctAnswer;
+
+      if (!isCorrect) {
+        wrongPlayers.push(playerId);
+        const player = room.players.find(p => p.id === playerId);
+        if (player) {
+          player.score = Math.max(-10, player.score - room.settings.trialPenalty);
+        }
+      }
+    });
+  }
 
   updateScores(room, wrongPlayers);
 }

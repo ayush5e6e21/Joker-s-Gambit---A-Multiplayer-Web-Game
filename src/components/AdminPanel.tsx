@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Crown, LogOut, Trash2, Plus, Play, Brain, Copy, Lock, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Crown, LogOut, Trash2, Plus, Play, Brain, Copy, Lock, CheckCircle2, Shuffle, ArrowUp, ArrowDown, FileText, Hash, Timer, ArrowLeft, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSocket } from '@/context/SocketContext';
@@ -24,11 +24,19 @@ export const AdminPanel = ({
     const [password, setPassword] = useState('');
     const [error, setError] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<'questions' | 'room'>('questions');
+    // Question bank sub-panel auth
+    const [isQuestionBankUnlocked, setIsQuestionBankUnlocked] = useState(false);
+    const [questionBankPassword, setQuestionBankPassword] = useState('');
+    const [questionBankError, setQuestionBankError] = useState(false);
+
+    const [activeTab, setActiveTab] = useState<'questions' | 'room'>('room');
     const [questions, setQuestions] = useState<TrialQuestion[]>([]);
     const [newQuestion, setNewQuestion] = useState('');
     const [newOptions, setNewOptions] = useState(['', '', '', '']);
     const [correctAnswer, setCorrectAnswer] = useState(0);
+    const [newQuestionType, setNewQuestionType] = useState<'mcq' | 'text'>('mcq');
+    const [isShuffling, setIsShuffling] = useState(false);
+    const [newQuestionTimer, setNewQuestionTimer] = useState<number | ''>('');
 
     // Room Control States
     const [roomCode, setRoomCode] = useState('');
@@ -52,16 +60,16 @@ export const AdminPanel = ({
         };
     }, [socket]);
 
-    // Fetch questions on load
+    // Fetch questions when question bank is unlocked
     useEffect(() => {
-        if (socket && isAuthenticated) {
+        if (socket && isQuestionBankUnlocked) {
             socket.emit('adminGetQuestions', (response: any) => {
                 if (response.success) {
                     setQuestions(response.questions);
                 }
             });
         }
-    }, [socket, isAuthenticated]);
+    }, [socket, isQuestionBankUnlocked]);
 
     const handleLogin = (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -74,6 +82,17 @@ export const AdminPanel = ({
         }
     };
 
+    const handleQuestionBankLogin = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        if (questionBankPassword === 'jarvis') {
+            setIsQuestionBankUnlocked(true);
+            setQuestionBankError(false);
+        } else {
+            setQuestionBankError(true);
+            setQuestionBankPassword('');
+        }
+    };
+
     const generateRoomCode = () => {
         const code = Math.random().toString(36).substring(2, 8).toUpperCase();
         setRoomCode(code);
@@ -82,22 +101,42 @@ export const AdminPanel = ({
     };
 
     const addQuestion = () => {
-        if (newQuestion && newOptions.every(o => o) && socket) {
-            const questionData = {
+        if (!socket) return;
+
+        if (newQuestionType === 'text') {
+            if (!newQuestion) return;
+            const questionData: any = {
+                type: 'text',
+                question: newQuestion,
+            };
+            if (newQuestionTimer) questionData.timeLimit = Number(newQuestionTimer);
+            socket.emit('adminAddQuestion', questionData, (response: any) => {
+                if (response.success) {
+                    socket.emit('adminGetQuestions', (res: any) => {
+                        if (res.success) setQuestions(res.questions);
+                    });
+                    setNewQuestion('');
+                    setNewQuestionTimer('');
+                }
+            });
+        } else {
+            if (!newQuestion || !newOptions.every(o => o)) return;
+            const questionData: any = {
+                type: 'mcq',
                 question: newQuestion,
                 options: newOptions,
                 correctAnswer
             };
-
+            if (newQuestionTimer) questionData.timeLimit = Number(newQuestionTimer);
             socket.emit('adminAddQuestion', questionData, (response: any) => {
                 if (response.success) {
-                    // Refresh questions
                     socket.emit('adminGetQuestions', (res: any) => {
                         if (res.success) setQuestions(res.questions);
                     });
                     setNewQuestion('');
                     setNewOptions(['', '', '', '']);
                     setCorrectAnswer(0);
+                    setNewQuestionTimer('');
                 }
             });
         }
@@ -111,6 +150,35 @@ export const AdminPanel = ({
                 }
             });
         }
+    };
+
+    const shuffleQuestions = () => {
+        if (!socket) return;
+        setIsShuffling(true);
+        socket.emit('adminShuffleQuestions', (response: any) => {
+            if (response.success) {
+                setQuestions(response.questions);
+            }
+            setTimeout(() => setIsShuffling(false), 600);
+        });
+    };
+
+    const reorderQuestion = (id: string, direction: 'up' | 'down') => {
+        if (!socket) return;
+        socket.emit('adminReorderQuestion', id, direction, (response: any) => {
+            if (response.success) {
+                setQuestions(response.questions);
+            }
+        });
+    };
+
+    const updateQuestionTimer = (id: string, timeLimit: number | undefined) => {
+        if (!socket) return;
+        socket.emit('adminUpdateQuestionTimer', id, timeLimit, (response: any) => {
+            if (response.success) {
+                setQuestions(prev => prev.map(q => q.id === id ? { ...q, timeLimit } : q));
+            }
+        });
     };
 
     const handleOpenLobby = () => {
@@ -133,7 +201,6 @@ export const AdminPanel = ({
 
         socket.emit('reclaimHost', roomCode, 'joker', (response: any) => {
             if (response.success) {
-                // Host reclaimed
                 console.log('Host reclaimed successfully');
             } else {
                 alert('Failed to reclaim host: ' + response.error);
@@ -275,7 +342,7 @@ export const AdminPanel = ({
                     <div className="flex gap-4 mb-8">
                         <Button
                             onClick={() => setActiveTab('questions')}
-                            className={`flex-1 py-6 rounded-none text-lg tracking-widest ${activeTab === 'questions' ? 'bg-[#D92525] text-white' : 'bg-transparent border border-gray-700 text-gray-400 hover:text-white'}`}
+                            className={`flex-1 py-6 rounded-none text-lg tracking-widest transition-all duration-200 ${activeTab === 'questions' ? 'bg-gradient-to-r from-[#D92525] to-[#ff4444] text-white shadow-[0_0_20px_rgba(217,37,37,0.3)]' : 'bg-transparent border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'}`}
                             data-cursor-hover
                         >
                             <Brain className="w-5 h-5 mr-3" />
@@ -283,7 +350,7 @@ export const AdminPanel = ({
                         </Button>
                         <Button
                             onClick={() => setActiveTab('room')}
-                            className={`flex-1 py-6 rounded-none text-lg tracking-widest ${activeTab === 'room' ? 'bg-[#D92525] text-white' : 'bg-transparent border border-gray-700 text-gray-400 hover:text-white'}`}
+                            className={`flex-1 py-6 rounded-none text-lg tracking-widest transition-all duration-200 ${activeTab === 'room' ? 'bg-gradient-to-r from-[#D92525] to-[#ff4444] text-white shadow-[0_0_20px_rgba(217,37,37,0.3)]' : 'bg-transparent border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'}`}
                             data-cursor-hover
                         >
                             <Play className="w-5 h-5 mr-3" />
@@ -298,89 +365,290 @@ export const AdminPanel = ({
                             animate={{ opacity: 1, y: 0 }}
                             className="space-y-6"
                         >
-                            {/* Existing Questions List */}
-                            <div className="border border-gray-800 rounded-xl p-6 bg-[#0f0f0f]">
-                                <h3 className="text-xl mb-6 text-gray-400 font-bold">EXISTING QUESTIONS ({questions.length})</h3>
-                                <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                                    {questions.map((q, i) => (
-                                        <motion.div
-                                            key={q.id}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: i * 0.05 }}
-                                            className="flex items-start justify-between p-4 bg-[#0a0a0a] rounded border border-gray-800 group hover:border-gray-600 transition-colors"
+                            {/* Question Bank Password Gate */}
+                            {!isQuestionBankUnlocked ? (
+                                <div className="border border-gray-800 rounded-xl p-12 bg-[#0f0f0f] flex flex-col items-center">
+                                    <Lock className="w-10 h-10 text-amber-400 mb-4" />
+                                    <h3 className="text-xl text-gray-400 font-bold tracking-widest mb-2">QUESTION BANK</h3>
+                                    <p className="text-gray-600 text-sm mb-6">Enter password to access the question bank</p>
+                                    <form onSubmit={handleQuestionBankLogin} className="w-full max-w-xs space-y-4">
+                                        <Input
+                                            type="password"
+                                            value={questionBankPassword}
+                                            onChange={(e) => {
+                                                setQuestionBankPassword(e.target.value);
+                                                setQuestionBankError(false);
+                                            }}
+                                            placeholder="Enter Question Bank Password"
+                                            className={`bg-[#050505] border-gray-700 text-center text-lg tracking-widest ${questionBankError ? 'border-[#D92525]' : ''}`}
+                                            autoFocus
+                                        />
+                                        {questionBankError && (
+                                            <p className="text-[#D92525] text-xs text-center">INCORRECT PASSWORD</p>
+                                        )}
+                                        <Button
+                                            type="submit"
+                                            className="w-full py-5 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-none tracking-widest"
                                         >
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <span className="text-xs text-[#D92525] bg-[#D92525]/10 px-2 py-1 rounded">Q{i + 1}</span>
-                                                    <p className="text-white font-mono">{q.question}</p>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-10">
-                                                    {q.options.map((opt, idx) => (
-                                                        <span key={idx} className={`text-xs ${idx === q.correctAnswer ? 'text-green-500 font-bold' : 'text-gray-500'}`}>
-                                                            {String.fromCharCode(65 + idx)}) {opt}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <Button
-                                                onClick={() => deleteQuestion(q.id)}
-                                                variant="ghost"
-                                                className="text-gray-600 hover:text-[#D92525] hover:bg-[#D92525]/10"
-                                                data-cursor-hover
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </Button>
-                                        </motion.div>
-                                    ))}
+                                            <Lock className="w-4 h-4 mr-2" />
+                                            UNLOCK
+                                        </Button>
+                                    </form>
                                 </div>
-                            </div>
-
-                            {/* Add New Question Form */}
-                            <div className="border border-gray-800 rounded-xl p-6 bg-[#0f0f0f]">
-                                <h3 className="text-xl mb-6 text-gray-400 font-bold">ADD NEW QUESTION</h3>
-                                <div className="space-y-4">
-                                    <Input
-                                        value={newQuestion}
-                                        onChange={(e) => setNewQuestion(e.target.value)}
-                                        placeholder="Enter question..."
-                                        className="bg-[#0a0a0a] border-gray-700 rounded-none h-12"
-                                        data-cursor-hover
-                                    />
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {newOptions.map((opt, i) => (
-                                            <div key={i} className="flex items-center gap-3">
-                                                <div
-                                                    onClick={() => setCorrectAnswer(i)}
-                                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${correctAnswer === i ? 'border-[#D92525] bg-[#D92525]/20' : 'border-gray-600'}`}
-                                                >
-                                                    {correctAnswer === i && <div className="w-3 h-3 bg-[#D92525] rounded-full" />}
-                                                </div>
-                                                <Input
-                                                    value={opt}
-                                                    onChange={(e) => {
-                                                        const newOpts = [...newOptions];
-                                                        newOpts[i] = e.target.value;
-                                                        setNewOptions(newOpts);
-                                                    }}
-                                                    placeholder={`Option ${i + 1}`}
-                                                    className={`bg-[#0a0a0a] border-gray-700 rounded-none ${correctAnswer === i ? 'border-[#D92525] text-[#D92525]' : ''}`}
-                                                    data-cursor-hover
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
+                            ) : (
+                                <>
+                                    {/* Back to Room Control button */}
                                     <Button
-                                        onClick={addQuestion}
-                                        disabled={!newQuestion || newOptions.some(o => !o)}
-                                        className="w-full py-6 bg-[#D92525] hover:bg-[#b91c1c] text-white rounded-none disabled:opacity-50 text-lg tracking-widest mt-4"
+                                        onClick={() => {
+                                            setIsQuestionBankUnlocked(false);
+                                            setQuestionBankPassword('');
+                                            setActiveTab('room');
+                                        }}
+                                        variant="outline"
+                                        className="border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 rounded-none mb-4"
                                         data-cursor-hover
                                     >
-                                        <Plus className="w-5 h-5 mr-2" />
-                                        ADD QUESTION
+                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                        BACK TO ROOM CONTROL
                                     </Button>
-                                </div>
-                            </div>
+
+                                    {/* Stats Banner */}
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="border border-gray-800 rounded-xl p-5 bg-[#0f0f0f] text-center">
+                                            <div className="flex items-center justify-center gap-2 mb-2">
+                                                <Hash className="w-5 h-5 text-[#D92525]" />
+                                                <span className="text-gray-500 text-xs tracking-widest">TOTAL</span>
+                                            </div>
+                                            <p className="text-4xl font-bold text-white font-mono">{questions.length}</p>
+                                        </div>
+                                        <div className="border border-gray-800 rounded-xl p-5 bg-[#0f0f0f] text-center">
+                                            <div className="flex items-center justify-center gap-2 mb-2">
+                                                <Brain className="w-5 h-5 text-blue-400" />
+                                                <span className="text-gray-500 text-xs tracking-widest">MCQ</span>
+                                            </div>
+                                            <p className="text-4xl font-bold text-blue-400 font-mono">{questions.filter(q => q.type !== 'text').length}</p>
+                                        </div>
+                                        <div className="border border-gray-800 rounded-xl p-5 bg-[#0f0f0f] text-center">
+                                            <div className="flex items-center justify-center gap-2 mb-2">
+                                                <FileText className="w-5 h-5 text-amber-400" />
+                                                <span className="text-gray-500 text-xs tracking-widest">TEXT</span>
+                                            </div>
+                                            <p className="text-4xl font-bold text-amber-400 font-mono">{questions.filter(q => q.type === 'text').length}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Existing Questions List */}
+                                    <div className="border border-gray-800 rounded-xl p-6 bg-[#0f0f0f]">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-xl text-gray-400 font-bold">QUESTION BANK ({questions.length})</h3>
+                                            <Button
+                                                onClick={shuffleQuestions}
+                                                disabled={isShuffling || questions.length < 2}
+                                                className="bg-[#1a1a1a] border border-gray-700 hover:border-purple-500 hover:text-purple-400 text-gray-300 rounded-none tracking-widest disabled:opacity-50"
+                                                data-cursor-hover
+                                            >
+                                                <Shuffle className={`w-4 h-4 mr-2 ${isShuffling ? 'animate-spin' : ''}`} />
+                                                SHUFFLE
+                                            </Button>
+                                        </div>
+                                        <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                                            <AnimatePresence mode="popLayout">
+                                                {questions.map((q, i) => (
+                                                    <motion.div
+                                                        key={q.id}
+                                                        layout
+                                                        initial={{ opacity: 0, x: -20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, x: 20 }}
+                                                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                                        className={`flex items-start justify-between p-4 rounded border group hover:border-gray-600 transition-colors ${i % 2 === 0 ? 'bg-[#0a0a0a] border-gray-800' : 'bg-[#0d0d0d] border-gray-800'
+                                                            }`}
+                                                    >
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-3 mb-2">
+                                                                <span className="text-xs text-[#D92525] bg-[#D92525]/10 px-2 py-1 rounded font-mono">Q{i + 1}</span>
+                                                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider ${q.type === 'text'
+                                                                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                                                                    : 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                                                                    }`}>
+                                                                    {q.type === 'text' ? 'TEXT' : 'MCQ'}
+                                                                </span>
+                                                                <p className="text-white font-mono text-sm leading-relaxed">{q.question.length > 120 ? q.question.substring(0, 120) + '...' : q.question}</p>
+                                                            </div>
+                                                            {q.options && (
+                                                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-10">
+                                                                    {q.options.map((opt: string, idx: number) => (
+                                                                        <span key={idx} className={`text-xs ${idx === q.correctAnswer ? 'text-green-500 font-bold' : 'text-gray-500'}`}>
+                                                                            {String.fromCharCode(65 + idx)}) {opt}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {q.type === 'text' && (
+                                                                <p className="text-gray-600 text-xs pl-10 italic">Admin-reviewed answer</p>
+                                                            )}
+                                                            <div className="flex items-center gap-2 pl-10 mt-2">
+                                                                <Clock className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                                                                <input
+                                                                    type="number"
+                                                                    min={5}
+                                                                    placeholder="Default"
+                                                                    value={q.timeLimit ?? ''}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value ? parseInt(e.target.value) : undefined;
+                                                                        updateQuestionTimer(q.id, val);
+                                                                    }}
+                                                                    className="bg-[#0a0a0a] border border-gray-700 text-cyan-400 text-[11px] font-mono px-2 py-1 w-20 rounded focus:outline-none focus:border-cyan-500"
+                                                                />
+                                                                <span className="text-gray-600 text-[10px]">sec</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col items-center gap-1 ml-2">
+                                                            <Button
+                                                                onClick={() => reorderQuestion(q.id, 'up')}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                disabled={i === 0}
+                                                                className="text-gray-600 hover:text-white hover:bg-gray-800 h-7 w-7 p-0 disabled:opacity-20"
+                                                                data-cursor-hover
+                                                            >
+                                                                <ArrowUp className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => reorderQuestion(q.id, 'down')}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                disabled={i === questions.length - 1}
+                                                                className="text-gray-600 hover:text-white hover:bg-gray-800 h-7 w-7 p-0 disabled:opacity-20"
+                                                                data-cursor-hover
+                                                            >
+                                                                <ArrowDown className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => deleteQuestion(q.id)}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-gray-600 hover:text-[#D92525] hover:bg-[#D92525]/10 h-7 w-7 p-0"
+                                                                data-cursor-hover
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </AnimatePresence>
+                                            {questions.length === 0 && (
+                                                <p className="text-gray-600 text-center py-8 italic">No questions in the bank.</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Add New Question Form */}
+                                    <div className="border border-gray-800 rounded-xl p-6 bg-[#0f0f0f]">
+                                        <h3 className="text-xl mb-6 text-gray-400 font-bold">ADD NEW QUESTION</h3>
+                                        <div className="space-y-4">
+                                            {/* Type Toggle */}
+                                            <div className="flex gap-2 mb-2">
+                                                <Button
+                                                    onClick={() => setNewQuestionType('mcq')}
+                                                    className={`flex-1 py-3 rounded-none text-sm tracking-widest ${newQuestionType === 'mcq'
+                                                        ? 'bg-blue-500/20 border border-blue-500/50 text-blue-400'
+                                                        : 'bg-transparent border border-gray-700 text-gray-500 hover:text-gray-300'
+                                                        }`}
+                                                    data-cursor-hover
+                                                >
+                                                    <Brain className="w-4 h-4 mr-2" />
+                                                    MCQ
+                                                </Button>
+                                                <Button
+                                                    onClick={() => setNewQuestionType('text')}
+                                                    className={`flex-1 py-3 rounded-none text-sm tracking-widest ${newQuestionType === 'text'
+                                                        ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400'
+                                                        : 'bg-transparent border border-gray-700 text-gray-500 hover:text-gray-300'
+                                                        }`}
+                                                    data-cursor-hover
+                                                >
+                                                    <FileText className="w-4 h-4 mr-2" />
+                                                    TEXT (RIDDLE)
+                                                </Button>
+                                            </div>
+
+                                            {/* Question input */}
+                                            {newQuestionType === 'text' ? (
+                                                <textarea
+                                                    value={newQuestion}
+                                                    onChange={(e) => setNewQuestion(e.target.value)}
+                                                    placeholder="Enter riddle / text question...\n(Admin will manually judge answers)"
+                                                    rows={4}
+                                                    className="w-full bg-[#0a0a0a] border border-gray-700 text-white p-3 text-sm font-mono resize-none focus:outline-none focus:border-amber-500"
+                                                />
+                                            ) : (
+                                                <Input
+                                                    value={newQuestion}
+                                                    onChange={(e) => setNewQuestion(e.target.value)}
+                                                    placeholder="Enter MCQ question..."
+                                                    className="bg-[#0a0a0a] border-gray-700 rounded-none h-12"
+                                                    data-cursor-hover
+                                                />
+                                            )}
+
+                                            {/* Options (only for MCQ) */}
+                                            {newQuestionType === 'mcq' && (
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    {newOptions.map((opt, i) => (
+                                                        <div key={i} className="flex items-center gap-3">
+                                                            <div
+                                                                onClick={() => setCorrectAnswer(i)}
+                                                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${correctAnswer === i ? 'border-[#D92525] bg-[#D92525]/20' : 'border-gray-600'}`}
+                                                            >
+                                                                {correctAnswer === i && <div className="w-3 h-3 bg-[#D92525] rounded-full" />}
+                                                            </div>
+                                                            <Input
+                                                                value={opt}
+                                                                onChange={(e) => {
+                                                                    const newOpts = [...newOptions];
+                                                                    newOpts[i] = e.target.value;
+                                                                    setNewOptions(newOpts);
+                                                                }}
+                                                                placeholder={`Option ${i + 1}`}
+                                                                className={`bg-[#0a0a0a] border-gray-700 rounded-none ${correctAnswer === i ? 'border-[#D92525] text-[#D92525]' : ''}`}
+                                                                data-cursor-hover
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Timer per question */}
+                                            <div className="flex items-center gap-3">
+                                                <Timer className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                                                <div className="flex-1">
+                                                    <p className="text-gray-500 text-xs tracking-widest mb-1">TIME LIMIT (SECONDS) — leave blank for default</p>
+                                                    <Input
+                                                        type="number"
+                                                        value={newQuestionTimer}
+                                                        onChange={(e) => setNewQuestionTimer(e.target.value ? parseInt(e.target.value) : '')}
+                                                        placeholder={`Default: global trial time`}
+                                                        className="bg-[#0a0a0a] border-gray-700 rounded-none h-10 font-mono text-cyan-400"
+                                                        data-cursor-hover
+                                                        min={5}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                onClick={addQuestion}
+                                                disabled={!newQuestion || (newQuestionType === 'mcq' && newOptions.some(o => !o))}
+                                                className="w-full py-6 bg-gradient-to-r from-[#D92525] to-[#ff4444] hover:from-[#b91c1c] hover:to-[#D92525] text-white rounded-none disabled:opacity-50 text-lg tracking-widest mt-4 shadow-[0_0_20px_rgba(217,37,37,0.2)] hover:shadow-[0_0_30px_rgba(217,37,37,0.4)] transition-all"
+                                                data-cursor-hover
+                                            >
+                                                <Plus className="w-5 h-5 mr-2" />
+                                                ADD {newQuestionType === 'text' ? 'TEXT' : 'MCQ'} QUESTION
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </motion.div>
                     )}
 
