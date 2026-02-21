@@ -422,7 +422,7 @@ const RulesScreen = ({ onComplete }: { onComplete: () => void }) => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        2 + 3 × 4 = ?
+        4 + 2 × 8 = ?
       </motion.div>
       <div className="flex gap-2">
         {['20', '14', '24', '10'].map((opt, i) => (
@@ -620,7 +620,7 @@ const LobbyScreen = ({
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm text-gray-500 mb-2 tracking-widest">TEAM NAME</label>
+            <label className="block text-sm text-gray-300 mb-2 tracking-widest">TEAM NAME</label>
             <Input
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
@@ -632,7 +632,7 @@ const LobbyScreen = ({
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 mb-2 tracking-widest">ROOM CODE</label>
+            <label className="block text-sm text-gray-300 mb-2 tracking-widest">ROOM CODE</label>
             <Input
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
@@ -701,7 +701,7 @@ const WaitingRoom = ({
         className="text-center"
       >
         <div className="mb-8">
-          <p className="text-gray-500 mb-2">ROOM CODE</p>
+          <p className="text-gray-300 mb-2">ROOM CODE</p>
           <div className="text-5xl font-bold tracking-[0.3em] text-[#D92525] glow-red">
             {gameState.roomCode}
           </div>
@@ -744,7 +744,7 @@ const WaitingRoom = ({
             START GAME
           </Button>
         ) : (
-          <p className="text-gray-500">Waiting for host to start...</p>
+          <p className="text-gray-300">Waiting for host to start...</p>
         )}
       </motion.div>
     </div>
@@ -781,7 +781,7 @@ const PredictionPhase = ({
           <div className="flex items-center gap-10">
             {/* Round */}
             <div className="flex flex-col items-center">
-              <p className="text-gray-500 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">ROUND</p>
+              <p className="text-gray-300 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">ROUND</p>
               <p className="text-5xl font-mono font-bold leading-none osd-text-red">
                 {gameState.round.toString()}
               </p>
@@ -793,7 +793,7 @@ const PredictionPhase = ({
             <div className="flex gap-8">
               {gameState.teams.map(team => (
                 <div key={team.id} className="flex flex-col items-center">
-                  <span className="text-[10px] text-gray-500 font-semibold tracking-[0.2em] uppercase mb-1">{team.name}</span>
+                  <span className="text-[10px] text-gray-300 font-semibold tracking-[0.2em] uppercase mb-1">{team.name}</span>
                   <span className={`text-3xl font-mono font-bold leading-none ${team.score < 0 ? 'osd-text-red' : 'osd-text-green'}`}>
                     {team.score}
                   </span>
@@ -805,7 +805,7 @@ const PredictionPhase = ({
         centerContent={null}
         rightContent={
           <div className="flex flex-col items-end">
-            <p className="text-gray-500 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
+            <p className="text-gray-300 font-semibold tracking-[0.2em] text-[10px] uppercase mb-1">TIMER</p>
             <div className={`text-5xl font-mono font-bold leading-none tracking-widest ${gameState.timeRemaining <= 10 ? 'osd-text-red' : 'osd-text-white'}`}>
               {gameState.timeRemaining.toString().padStart(2, '0')}s
             </div>
@@ -842,7 +842,7 @@ const PredictionPhase = ({
 
       <div className="text-center">
         <h2 className="text-5xl font-bold mb-4">PREDICTION PHASE</h2>
-        <p className="text-xl text-gray-500 mb-12">
+        <p className="text-xl text-gray-300 mb-12">
           Choose a number from 0 to 100. Closest to the target wins safety.
         </p>
 
@@ -889,7 +889,7 @@ const PredictionPhase = ({
             </div>
             <p className="text-2xl text-green-500">PREDICTION LOCKED</p>
             <p className="text-4xl font-bold mt-4">{number}</p>
-            <p className="text-gray-500 mt-8">Waiting for other teams...</p>
+            <p className="text-gray-300 mt-8">Waiting for other teams...</p>
           </motion.div>
         )}
 
@@ -943,7 +943,7 @@ const ComputationPhase = ({ gameState }: { gameState: GameState }) => {
         animate={{ opacity: 1 }}
         className="text-center w-full max-w-6xl mx-auto flex flex-col items-center"
       >
-        <h2 className="text-4xl font-bold mb-12 text-gray-500 tracking-widest">CALCULATING TARGET...</h2>
+        <h2 className="text-4xl font-bold mb-12 text-white tracking-widest">CALCULATING TARGET...</h2>
 
         {/* Architecture Flow Diagram */}
         <div className="relative w-full flex flex-col items-center">
@@ -1034,7 +1034,7 @@ const ComputationPhase = ({ gameState }: { gameState: GameState }) => {
                 <div className="text-8xl font-bold text-[#D92525] glow-red mb-4 font-mono tracking-tighter">
                   {target.toFixed(2)}
                 </div>
-                <p className="text-gray-500 tracking-[0.5em] text-sm font-bold uppercase">Target Number</p>
+                <p className="text-gray-300 tracking-[0.5em] text-sm font-bold uppercase">Target Number</p>
               </motion.div>
             </motion.div>
           )}
@@ -2309,111 +2309,114 @@ function App() {
       <div className="noise-overlay" />
       <div className="scanlines" />
       <div className="vignette" />
+      <div className="atmosphere-grading" />
 
       {/* Custom Cursor */}
       <CustomCursor />
 
-      {/* Main Content */}
-      <AnimatePresence mode="wait">
-        {gameState.currentTeamId && gameState.teams.find(t => t.id === gameState.currentTeamId)?.isEliminated && (
-          <motion.div key="eliminated" className="relative z-[9999]">
-            <EliminationScreen gameState={gameState} />
-          </motion.div>
-        )}
+      {/* Main Content - z-index above overlays so vignette/scanlines/noise only darken the background */}
+      <div className="relative z-[10000]">
+        <AnimatePresence mode="wait">
+          {gameState.currentTeamId && gameState.teams.find(t => t.id === gameState.currentTeamId)?.isEliminated && (
+            <motion.div key="eliminated" className="relative z-[9999]">
+              <EliminationScreen gameState={gameState} />
+            </motion.div>
+          )}
 
-        {gameState.phase === 'entrance' && !gameState.currentTeamId && (
-          <EntranceScreen key="entrance" onEnter={handleEnterGame} onAdminClick={() => setShowAdmin(true)} />
-        )}
-        {gameState.phase === 'rules' && (
-          <RulesScreen key="rules" onComplete={handleRulesComplete} />
-        )}
-        {gameState.phase === 'lobby' && !gameState.currentTeamId && (
-          <LobbyScreen
-            key="lobby-empty"
-            onJoinRoom={handleJoinRoom}
-          />
-        )}
-        {gameState.phase === 'lobby' && gameState.currentTeamId && (
-          <WaitingRoom
-            key="waiting"
-            gameState={gameState}
-            onStartGame={handleStartGame}
-            isHost={isHost}
-          />
-        )}
-        {gameState.phase === 'prediction' && (
-          isSpectator ? (
-            <SpectatorView
-              key="spectator-prediction"
-              gameState={gameState}
-              submittedTeams={submittedTeams}
+          {gameState.phase === 'entrance' && !gameState.currentTeamId && (
+            <EntranceScreen key="entrance" onEnter={handleEnterGame} onAdminClick={() => setShowAdmin(true)} />
+          )}
+          {gameState.phase === 'rules' && (
+            <RulesScreen key="rules" onComplete={handleRulesComplete} />
+          )}
+          {gameState.phase === 'lobby' && !gameState.currentTeamId && (
+            <LobbyScreen
+              key="lobby-empty"
+              onJoinRoom={handleJoinRoom}
             />
-          ) : (
-            <PredictionPhase
-              key={`prediction-${gameState.round}`}
+          )}
+          {gameState.phase === 'lobby' && gameState.currentTeamId && (
+            <WaitingRoom
+              key="waiting"
               gameState={gameState}
-              onSubmit={handleSubmitPrediction}
+              onStartGame={handleStartGame}
+              isHost={isHost}
             />
-          )
-        )}
-        {gameState.phase === 'computation' && (
-          <ComputationPhase key="computation" gameState={gameState} />
-        )}
-        {gameState.phase === 'zone-reveal' && (
-          <ZoneRevealPhase key="zone-reveal" gameState={gameState} />
-        )}
-        {gameState.phase === 'trial' && (
-          isSpectator ? (
-            <SpectatorView
-              key="spectator-trial"
-              gameState={gameState}
-              submittedTeams={submittedTeams}
-            />
-          ) : (
-            // Only show Trial Phase to Red Zone teams
-            gameState.redZoneTeams.includes(gameState.currentTeamId!) ? (
-              <TrialPhase
-                key="trial"
+          )}
+          {gameState.phase === 'prediction' && (
+            isSpectator ? (
+              <SpectatorView
+                key="spectator-prediction"
                 gameState={gameState}
-                onAnswer={handleTrialAnswer}
+                submittedTeams={submittedTeams}
               />
             ) : (
-              // Safe Zone (Green) View
-              <SafeScreen />
+              <PredictionPhase
+                key={`prediction-${gameState.round}`}
+                gameState={gameState}
+                onSubmit={handleSubmitPrediction}
+              />
             )
-          )
-        )}
-        {gameState.phase === 'results' && (
-          <ResultsPhase
-            key="results"
-            gameState={gameState}
-            isControl={isSpectator || gameState.teams.find(t => t.id === socket?.id)?.isHost || false}
-            onNextRound={() => {
-              if (socket) {
-                socket.emit('nextRound', gameState.roomCode, (response: any) => {
-                  if (!response.success) alert(response.error);
-                });
-              }
-            }}
-          />
-        )}
-        {gameState.phase === 'game-over' && (
-          <GameOverPhase key="game-over" gameState={gameState} />
-        )}
-      </AnimatePresence>
+          )}
+          {gameState.phase === 'computation' && (
+            <ComputationPhase key="computation" gameState={gameState} />
+          )}
+          {gameState.phase === 'zone-reveal' && (
+            <ZoneRevealPhase key="zone-reveal" gameState={gameState} />
+          )}
+          {gameState.phase === 'trial' && (
+            isSpectator ? (
+              <SpectatorView
+                key="spectator-trial"
+                gameState={gameState}
+                submittedTeams={submittedTeams}
+              />
+            ) : (
+              // Only show Trial Phase to Red Zone teams
+              gameState.redZoneTeams.includes(gameState.currentTeamId!) ? (
+                <TrialPhase
+                  key="trial"
+                  gameState={gameState}
+                  onAnswer={handleTrialAnswer}
+                />
+              ) : (
+                // Safe Zone (Green) View
+                <SafeScreen />
+              )
+            )
+          )}
+          {gameState.phase === 'results' && (
+            <ResultsPhase
+              key="results"
+              gameState={gameState}
+              isControl={isSpectator || gameState.teams.find(t => t.id === socket?.id)?.isHost || false}
+              onNextRound={() => {
+                if (socket) {
+                  socket.emit('nextRound', gameState.roomCode, (response: any) => {
+                    if (!response.success) alert(response.error);
+                  });
+                }
+              }}
+            />
+          )}
+          {gameState.phase === 'game-over' && (
+            <GameOverPhase key="game-over" gameState={gameState} />
+          )}
+        </AnimatePresence>
 
-      {/* Score Overlay (visible during game phases) */}
-      {/* Score Overlay Removed - Integrated into GameNavbar */}
+        {/* Score Overlay (visible during game phases) */}
+        {/* Score Overlay Removed - Integrated into GameNavbar */}
 
-      {/* Admin Panel Overlay */}
-      <AnimatePresence>
-        {showAdmin && (
-          <AdminPanel
-            onBack={() => setShowAdmin(false)}
-            onStartGame={handleStartGame}
-          />
-        )}
-      </AnimatePresence>
+        {/* Admin Panel Overlay */}
+        <AnimatePresence>
+          {showAdmin && (
+            <AdminPanel
+              onBack={() => setShowAdmin(false)}
+              onStartGame={handleStartGame}
+            />
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

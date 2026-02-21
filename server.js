@@ -99,14 +99,23 @@ function getRoom(code) {
 
 // Calculate average and target
 function calculateTarget(room) {
-  const numbers = Array.from(room.numbers.values()).map(n => Number(n));
-  if (numbers.length === 0) return 0;
+  // Only include numbers from active, non-eliminated players
+  const activePlayers = room.players.filter(p => !p.isEliminated);
+  const numbers = [];
+  activePlayers.forEach(p => {
+    const num = room.numbers.get(p.id);
+    if (num !== undefined) {
+      numbers.push(Number(num));
+    }
+  });
+
+  if (numbers.length === 0) return { average: 0, target: 0 };
 
   const sum = numbers.reduce((a, b) => a + b, 0);
   const average = sum / numbers.length;
-  const target = Math.round(average * room.multiplier);
+  const target = parseFloat((average * room.multiplier).toFixed(2));
 
-  console.log(`[DEBUG] Calc: Numbers=[${numbers}], Sum=${sum}, Avg=${average}, Target=${target}`);
+  console.log(`[DEBUG] Calc: ActivePlayers=${activePlayers.length}, Numbers=[${numbers}], Sum=${sum}, Avg=${average}, Target=${target}`);
 
   return { average: parseFloat(average.toFixed(2)), target };
 }
@@ -403,6 +412,13 @@ io.on('connection', (socket) => {
 
     if (!room || room.state !== GAME_STATES.NUMBER_SELECTION) {
       callback({ success: false, error: 'Cannot submit number now' });
+      return;
+    }
+
+    // Reject submissions from eliminated players
+    const submitter = room.players.find(p => p.id === socket.id);
+    if (submitter && submitter.isEliminated) {
+      callback({ success: false, error: 'You are eliminated' });
       return;
     }
 
@@ -809,6 +825,13 @@ function endNumberSelectionPhase(room) {
 
   room.state = GAME_STATES.CALCULATION;
 
+  // Default missing predictions to 0
+  room.players.forEach(p => {
+    if (!p.isEliminated && p.isConnected && !room.numbers.has(p.id)) {
+      room.numbers.set(p.id, 0);
+    }
+  });
+
   // Calculate target
   const { average, target } = calculateTarget(room);
   room.target = target;
@@ -957,12 +980,15 @@ function endTrialPhase(room) {
     // TEXT question: use admin judgments
     room.redPlayers.forEach(playerId => {
       const judgment = room.adminJudgments.get(playerId);
+      const hasAnswer = room.trialAnswers.has(playerId);
+
       // If admin didn't judge (or marked wrong), it's wrong
       if (!judgment) {
         wrongPlayers.push(playerId);
         const player = room.players.find(p => p.id === playerId);
         if (player) {
-          player.score = Math.max(-10, player.score - room.settings.trialPenalty);
+          const penalty = hasAnswer ? room.settings.trialPenalty : 1; // 1 for timeout
+          player.score = Math.max(-10, player.score - penalty);
         }
       }
     });
@@ -970,13 +996,15 @@ function endTrialPhase(room) {
     // MCQ question: auto-check
     room.redPlayers.forEach(playerId => {
       const answerIndex = room.trialAnswers.get(playerId);
-      const isCorrect = answerIndex === room.currentQuestion.correctAnswer;
+      const hasAnswer = answerIndex !== undefined;
+      const isCorrect = hasAnswer && answerIndex === room.currentQuestion.correctAnswer;
 
       if (!isCorrect) {
         wrongPlayers.push(playerId);
         const player = room.players.find(p => p.id === playerId);
         if (player) {
-          player.score = Math.max(-10, player.score - room.settings.trialPenalty);
+          const penalty = hasAnswer ? room.settings.trialPenalty : 1; // 1 for timeout
+          player.score = Math.max(-10, player.score - penalty);
         }
       }
     });
