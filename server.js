@@ -5,6 +5,7 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import trialQuestions from './trialQuestions.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -43,10 +44,56 @@ const GAME_STATES = {
 
 // Store rooms and game data
 const rooms = new Map();
-const adminQuestions = [];
-const deletedBuiltInIds = new Set();
+let adminQuestions = [];
+let deletedBuiltInIds = new Set();
 // Track display order of question IDs (null = use default order)
 let questionOrder = null;
+
+const DATA_FILE = path.join(__dirname, 'data.json');
+
+// Load persistent question data
+try {
+  if (fs.existsSync(DATA_FILE)) {
+    const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    adminQuestions = data.adminQuestions || [];
+    deletedBuiltInIds = new Set(data.deletedBuiltInIds || []);
+    questionOrder = data.questionOrder || null;
+
+    if (data.builtInTimeLimits) {
+      trialQuestions.forEach(q => {
+        if (data.builtInTimeLimits[q.id] !== undefined) {
+          q.timeLimit = data.builtInTimeLimits[q.id];
+        }
+      });
+    }
+    console.log('[DEBUG] Loaded persistent question data from data.json');
+  }
+} catch (e) {
+  console.error('[DEBUG] Error loading question data:', e);
+}
+
+// Function to save data to file
+function saveData() {
+  try {
+    const builtInTimeLimits = {};
+    trialQuestions.forEach(q => {
+      if (q.timeLimit !== undefined) {
+        builtInTimeLimits[q.id] = q.timeLimit;
+      }
+    });
+
+    const data = {
+      adminQuestions,
+      deletedBuiltInIds: Array.from(deletedBuiltInIds),
+      questionOrder,
+      builtInTimeLimits
+    };
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[DEBUG] Error saving question data:', e);
+  }
+}
+
 const gameSettings = {
   numberSelectionTime: 60,
   trialTime: 180,
@@ -637,6 +684,7 @@ io.on('connection', (socket) => {
     if (questionOrder) {
       questionOrder.push(question.id);
     }
+    saveData();
     callback({ success: true, questionId: question.id });
   });
 
@@ -688,6 +736,7 @@ io.on('connection', (socket) => {
     if (questionOrder) {
       questionOrder = questionOrder.filter(id => id !== questionId);
     }
+    saveData();
     callback({ success: true });
   });
 
@@ -701,6 +750,7 @@ io.on('connection', (socket) => {
       [ids[i], ids[j]] = [ids[j], ids[i]];
     }
     questionOrder = ids;
+    saveData();
     const shuffled = getAllActiveQuestions();
     callback({ success: true, questions: shuffled });
   });
@@ -723,6 +773,7 @@ io.on('connection', (socket) => {
     }
     // Swap
     [questionOrder[idx], questionOrder[newIdx]] = [questionOrder[newIdx], questionOrder[idx]];
+    saveData();
     const reordered = getAllActiveQuestions();
     callback({ success: true, questions: reordered });
   });
@@ -739,6 +790,7 @@ io.on('connection', (socket) => {
     const customQ = adminQuestions.find(q => q.id === questionId);
     if (customQ) {
       customQ.timeLimit = timeLimit || undefined;
+      saveData();
       if (callback) callback({ success: true });
       return;
     }
@@ -746,6 +798,7 @@ io.on('connection', (socket) => {
     const builtInQ = trialQuestions.find(q => q.id === questionId);
     if (builtInQ) {
       builtInQ.timeLimit = timeLimit || undefined;
+      saveData();
       if (callback) callback({ success: true });
       return;
     }

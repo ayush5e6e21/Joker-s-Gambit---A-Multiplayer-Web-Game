@@ -1,0 +1,172 @@
+{
+  "adminQuestions": [
+    {
+      "id": "49a1647f-7392-4868-b815-a588eaac4e66",
+      "type": "mcq",
+      "question": "You are in a dark room with:  One match, A candle, A lamp, A gas stove...What do you light first?",
+      "options": [
+        "Candle",
+        "Match",
+        "Lamp",
+        "Stove"
+      ],
+      "correctAnswer": 1,
+      "timeLimit": 12
+    },
+    {
+      "id": "1e977fea-3ed1-49eb-b2ab-0bb060b2bfe2",
+      "type": "mcq",
+      "question": "A plane crashes exactly on the border between India and Nepal. Where do they bury the survivors?",
+      "options": [
+        "India",
+        "Nepal",
+        "Split them equally",
+        "None of these"
+      ],
+      "correctAnswer": 3,
+      "timeLimit": 40
+    },
+    {
+      "id": "4f8af46b-b30f-4626-8677-85ab6efed029",
+      "type": "mcq",
+      "question": "What is 200−[52−{3×(4−6)}]÷2 ?",
+      "options": [
+        "171",
+        "0",
+        "175",
+        "144"
+      ],
+      "correctAnswer": 0,
+      "timeLimit": 25
+    },
+    {
+      "id": "90dfccfe-ff4a-4d0e-921f-a66cdb6b97b4",
+      "type": "mcq",
+      "question": "A lily pad doubles in size every day. If it takes 24 days to fill half the pond, how many days will it take to fill the entire pond?",
+      "options": [
+        "48",
+        "30",
+        "25",
+        "24"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 120
+    },
+    {
+      "id": "70952dac-0f6f-4ba8-9eb6-c98c81315395",
+      "type": "mcq",
+      "question": "You have a glass full of water. There is an ice cube floating in it. When the ice melts, what happens?",
+      "options": [
+        "Water spills out",
+        "Water level goes up",
+        "Water level stays the same",
+        "The glass breaks"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 60
+    },
+    {
+      "id": "36ed0c4c-feec-4c33-bd22-3df2a991bc1a",
+      "type": "mcq",
+      "question": "If you drop a feather and a hammer at the same time in a vacuum, what happens?",
+      "options": [
+        "Hammer hits first",
+        "Feather hits first",
+        "Both hit at the same time",
+        "Depends on weight"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 60
+    },
+    {
+      "id": "d0f45d91-c924-4d1b-b2bc-691ea5f8e84b",
+      "type": "mcq",
+      "question": "You’re in a race. You pass the person in second place. What position are you in now?",
+      "options": [
+        "First",
+        "Second",
+        "Third",
+        "Still last"
+      ],
+      "correctAnswer": 1,
+      "timeLimit": 25
+    },
+    {
+      "id": "888ba41e-796d-4cd8-be46-39fe918d5b81",
+      "type": "text",
+      "question": "A man stands on one side of a river.\nHis dog is on the other side.\nThe dog crosses the river without getting wet.\nNo bridge. No boat.\n\nHow?",
+      "correctAnswer": null,
+      "timeLimit": 60
+    },
+    {
+      "id": "d1e373ad-4142-4d70-8263-fe008f6e87df",
+      "type": "mcq",
+      "question": "Solve: 7+7+7*7-77+7+7",
+      "options": [
+        "0",
+        "2",
+        "-2",
+        "5"
+      ],
+      "correctAnswer": 0,
+      "timeLimit": 15
+    },
+    {
+      "id": "857a5ae7-a598-49b6-9823-f7d07b3038cf",
+      "type": "mcq",
+      "question": "What's the name of this event?",
+      "options": [
+        "Tomb Raider",
+        "Squid Game",
+        "Resident Evil",
+        "Don't Know"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 10
+    }
+  ],
+  "deletedBuiltInIds": [
+    "q1",
+    "q3",
+    "q5",
+    "q7",
+    "q9",
+    "q11",
+    "q14",
+    "q17",
+    "q19",
+    "q15",
+    "q10",
+    "q12"
+  ],
+  "questionOrder": [
+    "q18",
+    "70952dac-0f6f-4ba8-9eb6-c98c81315395",
+    "q2",
+    "4f8af46b-b30f-4626-8677-85ab6efed029",
+    "q20",
+    "q6",
+    "q13",
+    "q8",
+    "d1e373ad-4142-4d70-8263-fe008f6e87df",
+    "q4",
+    "36ed0c4c-feec-4c33-bd22-3df2a991bc1a",
+    "49a1647f-7392-4868-b815-a588eaac4e66",
+    "1e977fea-3ed1-49eb-b2ab-0bb060b2bfe2",
+    "888ba41e-796d-4cd8-be46-39fe918d5b81",
+    "90dfccfe-ff4a-4d0e-921f-a66cdb6b97b4",
+    "q16",
+    "d0f45d91-c924-4d1b-b2bc-691ea5f8e84b",
+    "857a5ae7-a598-49b6-9823-f7d07b3038cf"
+  ],
+  "builtInTimeLimits": {
+    "q2": 300,
+    "q4": 300,
+    "q6": 300,
+    "q8": 300,
+    "q13": 300,
+    "q16": 300,
+    "q18": 300,
+    "q20": 300
+  }
+}
