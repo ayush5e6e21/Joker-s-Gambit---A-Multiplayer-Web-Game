@@ -1,5 +1,84 @@
 {
-  "adminQuestions": [],
+  "adminQuestions": [
+    {
+      "id": "613fa320-5aaf-40d9-bea2-414264048362",
+      "type": "mcq",
+      "question": "You have 10 candles. You blow out 3. How many candles remain after 5hours?",
+      "options": [
+        "7",
+        "3",
+        "10",
+        "0"
+      ],
+      "correctAnswer": 1,
+      "timeLimit": 60
+    },
+    {
+      "id": "38209990-c060-447a-af2c-f0329104544c",
+      "type": "mcq",
+      "question": "What's the name of this event ?",
+      "options": [
+        "Tomb Raider",
+        "Far Cry",
+        "Resident Evil",
+        "Red Dead Redemption"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 15
+    },
+    {
+      "id": "d71e5bb5-332e-45cd-955b-12b663c42615",
+      "type": "mcq",
+      "question": "A plane crashes exactly on the border between India and Nepal. Where do they bury the survivors?",
+      "options": [
+        "India",
+        "Nepal",
+        "Split them equally",
+        "None of these"
+      ],
+      "correctAnswer": 3,
+      "timeLimit": 90
+    },
+    {
+      "id": "96728b28-68e7-49bb-8f33-0b05775e4857",
+      "type": "mcq",
+      "question": "Which is bigger?",
+      "options": [
+        "0.999....",
+        "1",
+        "They are equal",
+        "Depends on my mood"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 30
+    },
+    {
+      "id": "89e163a8-47d5-4a91-a8ec-d06150201847",
+      "type": "mcq",
+      "question": "A boy is in a car accident. The father dies. At the hospital, the surgeon says, “I can’t operate. He’s my son.”",
+      "options": [
+        "Adoption",
+        "Stepfather",
+        "The surgeon is his mother",
+        "Mistake"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 30
+    },
+    {
+      "id": "e982a0ae-2c93-41dc-a835-be0c8e8123d4",
+      "type": "mcq",
+      "question": "Solve: (8+4)2÷6+18÷3×2",
+      "options": [
+        "10",
+        "12",
+        "18",
+        "16"
+      ],
+      "correctAnswer": 3,
+      "timeLimit": 30
+    }
+  ],
   "deletedBuiltInIds": [
     "q1",
     "q3",
@@ -10,8 +89,25 @@
     "q14",
     "q15",
     "q17",
-    "q19"
+    "q19",
+    "q12"
   ],
-  "questionOrder": [],
+  "questionOrder": [
+    "q6",
+    "q18",
+    "613fa320-5aaf-40d9-bea2-414264048362",
+    "q20",
+    "q10",
+    "q16",
+    "q8",
+    "q4",
+    "q13",
+    "q2",
+    "38209990-c060-447a-af2c-f0329104544c",
+    "d71e5bb5-332e-45cd-955b-12b663c42615",
+    "96728b28-68e7-49bb-8f33-0b05775e4857",
+    "89e163a8-47d5-4a91-a8ec-d06150201847",
+    "e982a0ae-2c93-41dc-a835-be0c8e8123d4"
+  ],
   "builtInTimeLimits": {}
 }
