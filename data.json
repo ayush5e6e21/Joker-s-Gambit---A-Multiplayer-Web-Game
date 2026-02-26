@@ -77,6 +77,142 @@
       ],
       "correctAnswer": 3,
       "timeLimit": 30
+    },
+    {
+      "id": "b6f3e646-282b-4fd8-8b76-8e1873743521",
+      "type": "mcq",
+      "question": "Solve : 200÷4−(6×3)+52÷5+12×2",
+      "options": [
+        "55",
+        "66.4",
+        "44.6",
+        "44"
+      ],
+      "correctAnswer": 1,
+      "timeLimit": 50
+    },
+    {
+      "id": "96cb80c2-b6b1-447b-bf7f-9af5d7de3909",
+      "type": "mcq",
+      "question": "Solve : 72÷(3×2)+52−4×3+16÷4",
+      "options": [
+        "56",
+        "66",
+        "46",
+        "76"
+      ],
+      "correctAnswer": 0,
+      "timeLimit": 40
+    },
+    {
+      "id": "95cb9dde-3d6f-45d9-9af2-7f8628640d3c",
+      "type": "text",
+      "question": "A man lives on the 10th floor.\nEvery day he takes the lift down to go to work.\nWhen he returns, he takes the lift to the 7th floor and walks the rest — except on rainy days, when he goes all the way to the 10th floor.",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "305fa4af-0673-4305-9b99-b10133588e1d",
+      "type": "text",
+      "question": "A woman shoots her husband.\nThen she holds him underwater for 5 minutes.\nFinally, she hangs him.\nAfter that, they both go out for dinner.",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "c1986fab-1457-425f-929b-c81848a07f3c",
+      "type": "text",
+      "question": "I speak without a mouth and hear without ears.\nI have no body, but I come alive with wind.",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "aad87677-2f12-41fa-98df-5d60e77d083a",
+      "type": "text",
+      "question": "You see a boat filled with people.\nIt has not sunk.\nBut when you look again, you don’t see a single person on the boat.",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "f06b9a3f-34f9-423d-a318-ccbab5a1ad10",
+      "type": "mcq",
+      "question": "A small lotus plant is floating in a pond.  Every day, the number of lotus leaves doubles in size.  If it takes 30 days for the pond to become completely covered with lotus leaves...On which day was the pond half covered?",
+      "options": [
+        "15",
+        "20",
+        "29",
+        "30"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 90
+    },
+    {
+      "id": "72732794-fdd6-4719-bbf8-3da3f22855b8",
+      "type": "text",
+      "question": "Two trains are 100 km apart, moving toward each other.\nEach train travels at 50 km/h.\n\nA bird starts at one train and flies toward the other at 100 km/h.\nWhen it reaches the second train, it instantly turns back.\nIt keeps flying back and forth until the trains collide.\n\nHow far did the bird fly?",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "e81dff2d-f269-40b6-8e92-c141926de647",
+      "type": "text",
+      "question": "A father says:\n“When I was your age, I was 30.”\nThe son replies:\n“When I am your age, I will be 30.”\n\nHow old are they now?",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "9c0aecff-46c8-431c-a0f7-d2b4bbf6c501",
+      "type": "text",
+      "question": "A hotel has infinitely many rooms.\nAll rooms are full.\n\nA new guest arrives.\n\nCan the hotel still accommodate him?",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "7dc08706-4742-4c0b-898c-5be7addadb21",
+      "type": "text",
+      "question": "You are given:\n\n2 Red capsules\n\n2 Blue capsules\n\nYou must swallow exactly 2 capsules at the same time.\n\nCondition:\n\nYou will survive only if you take 1 Red and 1 Blue together.\n\nIf you take 2 Reds → you die.\n\nIf you take 2 Blues → you die.\n\nYou cannot tell which capsule is which from the outside.\n\n\nHow can you guarantee survival?",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "7f131e9a-426b-4be4-8be1-fc718af28183",
+      "type": "text",
+      "question": "You are standing outside a closed room.\n\nOutside the room there are 3 switches.\n\nInside the room there is only 1 light bulb.\n\nOnly one switch controls the bulb. The other two do nothing.\n\nRules:\n\nYou can turn the switches on and off as much as you want.\n\nYou may enter the room only once.\n\nOnce you enter, you cannot touch the switches again.\n\nHow do you figure out which switch controls the bulb?",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "f1f230a6-7ee3-4c06-b8ab-5cdb92b7b90c",
+      "type": "text",
+      "question": "You have two ropes.\nEach rope takes exactly 1 hour to burn.\nBut they burn at uneven speeds (not uniformly).\n\nYou also have a lighter.\n\nHow do you measure exactly 45 minutes?",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "2010e3cc-2f19-4eb8-9c8b-714351ae8c0b",
+      "type": "text",
+      "question": "You have 8 identical-looking coins.\nOne coin is slightly heavier.\n\nYou have a balance scale.\nYou may weigh coins only two times.\n\nHow do you find the heavier coin?",
+      "correctAnswer": null,
+      "timeLimit": 240
+    },
+    {
+      "id": "0e6b636e-d712-431f-a2ed-11f82c3269c3",
+      "type": "mcq",
+      "question": "Four people must cross a bridge at night.They have one flashlight.The bridge holds only two people at a time.Speeds:Person A: 1 min Person B: 2 min Person C: 7 min Person D: 10 min When two cross, they move at the slower person’s speed. What is the fastest time they can all cross?",
+      "options": [
+        "17",
+        "10",
+        "15",
+        "11"
+      ],
+      "correctAnswer": 0,
+      "timeLimit": 240
+    },
+    {
+      "id": "44b35359-515a-409a-841a-cffc573fb4cc",
+      "type": "text",
+      "question": "You are in a sealed room.\nNo doors.\nNo windows.\nConcrete walls.\n\nInside you have:\n\nA mirror\n\nA wooden table\n\nHow do you escape?",
+      "correctAnswer": null,
+      "timeLimit": 240
     }
   ],
   "deletedBuiltInIds": [
@@ -107,7 +243,33 @@
     "d71e5bb5-332e-45cd-955b-12b663c42615",
     "96728b28-68e7-49bb-8f33-0b05775e4857",
     "89e163a8-47d5-4a91-a8ec-d06150201847",
-    "e982a0ae-2c93-41dc-a835-be0c8e8123d4"
+    "e982a0ae-2c93-41dc-a835-be0c8e8123d4",
+    "b6f3e646-282b-4fd8-8b76-8e1873743521",
+    "96cb80c2-b6b1-447b-bf7f-9af5d7de3909",
+    "95cb9dde-3d6f-45d9-9af2-7f8628640d3c",
+    "305fa4af-0673-4305-9b99-b10133588e1d",
+    "c1986fab-1457-425f-929b-c81848a07f3c",
+    "aad87677-2f12-41fa-98df-5d60e77d083a",
+    "f06b9a3f-34f9-423d-a318-ccbab5a1ad10",
+    "72732794-fdd6-4719-bbf8-3da3f22855b8",
+    "e81dff2d-f269-40b6-8e92-c141926de647",
+    "9c0aecff-46c8-431c-a0f7-d2b4bbf6c501",
+    "7dc08706-4742-4c0b-898c-5be7addadb21",
+    "7f131e9a-426b-4be4-8be1-fc718af28183",
+    "f1f230a6-7ee3-4c06-b8ab-5cdb92b7b90c",
+    "2010e3cc-2f19-4eb8-9c8b-714351ae8c0b",
+    "0e6b636e-d712-431f-a2ed-11f82c3269c3",
+    "44b35359-515a-409a-841a-cffc573fb4cc"
   ],
-  "builtInTimeLimits": {}
+  "builtInTimeLimits": {
+    "q2": 240,
+    "q4": 240,
+    "q6": 240,
+    "q8": 240,
+    "q10": 240,
+    "q13": 240,
+    "q16": 240,
+    "q18": 240,
+    "q20": 240
+  }
 }
