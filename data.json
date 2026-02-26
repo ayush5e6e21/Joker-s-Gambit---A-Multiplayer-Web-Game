@@ -1,6 +1,65 @@
 {
-  "adminQuestions": [],
-  "deletedBuiltInIds": [],
-  "questionOrder": [],
+  "adminQuestions": [
+    {
+      "id": "dummy-1",
+      "type": "mcq",
+      "question": "Dummy 1: What is the capital of France?",
+      "options": [
+        "London",
+        "Berlin",
+        "Paris",
+        "Madrid"
+      ],
+      "correctAnswer": 2,
+      "timeLimit": 30
+    },
+    {
+      "id": "dummy-2",
+      "type": "mcq",
+      "question": "Dummy 2: Which planet is known as the Red Planet?",
+      "options": [
+        "Earth",
+        "Mars",
+        "Jupiter",
+        "Saturn"
+      ],
+      "correctAnswer": 1,
+      "timeLimit": 30
+    },
+    {
+      "id": "dummy-3",
+      "type": "text",
+      "question": "Dummy 3: Type 'testing' to pass this question.",
+      "correctAnswer": null,
+      "timeLimit": 60
+    }
+  ],
+  "deletedBuiltInIds": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8",
+    "q9",
+    "q10",
+    "q11",
+    "q12",
+    "q13",
+    "q14",
+    "q15",
+    "q16",
+    "q17",
+    "q18",
+    "q19",
+    "q20"
+  ],
+  "questionOrder": [
+    "dummy-1",
+    "dummy-2",
+    "dummy-3"
+  ],
   "builtInTimeLimits": {}
 }
