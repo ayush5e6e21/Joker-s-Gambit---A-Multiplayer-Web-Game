@@ -81,7 +81,7 @@ You need to run both the backend server and the frontend client.
 
 ### As Admin (Game Master)
 1.  Open the game in a browser window.
-2.  Click **"ADMIN PANEL"**.
+2.  Click **"ADMIN PANEL"**....(password: joker)
 3.  Set the **Prediction Timer** (default 60s) and **Trial Timer** (default 180s).
 4.  Click **"CREATE ROOM"**.
 5.  Share the 6-character **Room Code** with players.
@@ -94,6 +94,8 @@ You need to run both the backend server and the frontend client.
 3.  Click **"ENTER GAME"**.
 4.  Wait for the Admin to start.
 5.  Submit your number when the **Prediction Phase** begins!
+
+🔗 Play Now: https://joker-s-gambit-a-multiplayer-web-game.onrender.com/
 
 ## 📂 Project Structure
 
